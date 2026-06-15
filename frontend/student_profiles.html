@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | CampusEvent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4); }
+        .btn-outline {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .btn-outline:hover { background: rgba(255, 255, 255, 0.15); }
+        .input-field { background: rgba(255, 255, 255, 0.9); transition: all 0.3s ease; }
+        .input-field:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); outline: none; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+    </style>
+</head>
+<body class="animated-bg min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Nav -->
+        <div class="glass-card p-4 mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-user text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">My Profile</h1>
+                    <p class="text-white/60 text-sm">Build your student profile</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="viewDirectory()" class="btn-outline px-4 py-2 rounded-lg text-white text-sm">
+                    <i class="fas fa-users mr-1"></i> Browse Students
+                </button>
+                <button onclick="goToDashboard()" class="btn-outline px-4 py-2 rounded-lg text-white text-sm">
+                    <i class="fas fa-arrow-left mr-1"></i> Dashboard
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Left: Form -->
+            <div class="md:col-span-2">
+                <div class="glass-card p-6">
+                    <h2 class="text-white font-bold text-lg mb-4">Profile Information</h2>
+                    <div id="profileForm" class="space-y-4">
+                        <div>
+                            <label class="text-white/80 text-sm font-medium mb-1 block">Full Name</label>
+                            <input type="text" id="name" class="input-field w-full px-4 py-3 rounded-xl text-gray-800" placeholder="Your full name">
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm font-medium mb-1 block">Roll Number</label>
+                            <input type="text" id="rollno" class="input-field w-full px-4 py-3 rounded-xl text-gray-800" placeholder="e.g., CS2024001">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-white/80 text-sm font-medium mb-1 block">Branch</label>
+                                <select id="branch" class="input-field w-full px-4 py-3 rounded-xl text-gray-800">
+                                    <option value="">Select Branch</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Mechanical">Mechanical</option>
+                                    <option value="Civil">Civil</option>
+                                    <option value="Electrical">Electrical</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-white/80 text-sm font-medium mb-1 block">Year</label>
+                                <select id="year" class="input-field w-full px-4 py-3 rounded-xl text-gray-800">
+                                    <option value="">Select Year</option>
+                                    <option value="1st">1st Year</option>
+                                    <option value="2nd">2nd Year</option>
+                                    <option value="3rd">3rd Year</option>
+                                    <option value="4th">4th Year</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm font-medium mb-1 block">Skills <span class="text-white/40 text-xs">(comma separated)</span></label>
+                            <input type="text" id="skills" class="input-field w-full px-4 py-3 rounded-xl text-gray-800" placeholder="e.g., React, Python, UI/UX, ML">
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm font-medium mb-1 block">LinkedIn URL</label>
+                            <input type="url" id="linkedin" class="input-field w-full px-4 py-3 rounded-xl text-gray-800" placeholder="https://linkedin.com/in/yourprofile">
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm font-medium mb-1 block">GitHub URL</label>
+                            <input type="url" id="github" class="input-field w-full px-4 py-3 rounded-xl text-gray-800" placeholder="https://github.com/yourprofile">
+                        </div>
+                        <button onclick="saveProfile()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold">
+                            <i class="fas fa-save mr-2"></i> Save Profile
+                        </button>
+                    </div>
+                    <div id="msg" class="mt-4 p-3 rounded-lg text-center text-sm hidden"></div>
+                </div>
+            </div>
+
+            <!-- Right: Preview Card -->
+            <div>
+                <div class="glass-card p-6 text-center sticky top-4">
+                    <div class="w-24 h-24 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mx-auto flex items-center justify-center mb-3">
+                        <span id="previewInitials" class="text-3xl font-bold text-white">?</span>
+                    </div>
+                    <h3 id="previewName" class="text-white font-bold text-lg">Your Name</h3>
+                    <p id="previewRollno" class="text-white/60 text-sm">Roll Number</p>
+                    <p id="previewBranchYear" class="text-white/60 text-xs">Branch • Year</p>
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <p class="text-white/70 text-xs mb-2 font-semibold">SKILLS</p>
+                        <div id="previewSkills" class="flex flex-wrap gap-1 justify-center">
+                            <span class="text-white/40 text-xs">No skills added</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/10 flex justify-center gap-4">
+                        <a id="previewLinkedin" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 text-lg"><i class="fab fa-linkedin"></i></a>
+                        <a id="previewGithub" href="#" target="_blank" class="text-white/70 hover:text-white text-lg"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Directory Modal -->
+        <div id="directoryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+            <div class="glass-card w-full max-w-4xl max-h-[80vh] overflow-y-auto p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-white"><i class="fas fa-users mr-2"></i>Student Directory</h2>
+                    <button onclick="closeDirectory()" class="text-white/60 hover:text-white text-2xl">&times;</button>
+                </div>
+                <input type="text" id="searchStudents" placeholder="Search by name, skills, branch..." class="input-field w-full px-4 py-3 rounded-xl text-gray-800 mb-4" oninput="renderDirectory()">
+                <div id="directoryList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-white/50 text-center py-8">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "/api";
+
+        function getToken() { return localStorage.getItem("token"); }
+        function getUser() { return { id: localStorage.getItem("userId"), name: localStorage.getItem("userName"), role: localStorage.getItem("userRole") }; }
+
+        function showMsg(msg, isError) {
+            const el = document.getElementById("msg");
+            el.classList.remove("hidden", "bg-green-500/30", "text-green-100", "bg-red-500/30", "text-red-100");
+            el.className = `mt-4 p-3 rounded-lg text-center text-sm ${isError ? 'bg-red-500/30 text-red-100' : 'bg-green-500/30 text-green-100'}`;
+            el.innerHTML = msg;
+            setTimeout(() => el.classList.add("hidden"), 3000);
+        }
+
+        async function loadProfile() {
+            const token = getToken();
+            if (!token) { window.location.href = "login.html"; return; }
+            try {
+                const res = await fetch(`${API}/profile`, { headers: { "Authorization": `Bearer ${token}` } });
+                if (res.status === 404) return;
+                const data = await res.json();
+                if (data && data.rollno) {
+                    document.getElementById("rollno").value = data.rollno || "";
+                    document.getElementById("branch").value = data.branch || "";
+                    document.getElementById("year").value = data.year || "";
+                    document.getElementById("skills").value = data.skills || "";
+                    document.getElementById("linkedin").value = data.linkedin || "";
+                    document.getElementById("github").value = data.github || "";
+                    updatePreview();
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function updatePreview() {
+            const name = document.getElementById("name").value || getUser().name || "Your Name";
+            const rollno = document.getElementById("rollno").value || "Roll Number";
+            const branch = document.getElementById("branch").value || "Branch";
+            const year = document.getElementById("year").value || "Year";
+            const skills = document.getElementById("skills").value;
+            const linkedin = document.getElementById("linkedin").value;
+            const github = document.getElementById("github").value;
+
+            document.getElementById("previewName").textContent = name;
+            document.getElementById("previewRollno").textContent = rollno;
+            document.getElementById("previewBranchYear").textContent = `${branch} • ${year}`;
+            document.getElementById("previewInitials").textContent = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+
+            const skillsContainer = document.getElementById("previewSkills");
+            if (skills) {
+                skillsContainer.innerHTML = skills.split(",").map(s => `<span class="px-2 py-1 bg-white/10 rounded-full text-white/70 text-xs">${s.trim()}</span>`).join("");
+            } else {
+                skillsContainer.innerHTML = '<span class="text-white/40 text-xs">No skills added</span>';
+            }
+
+            const li = document.getElementById("previewLinkedin");
+            const gh = document.getElementById("previewGithub");
+            li.href = linkedin || "#";
+            gh.href = github || "#";
+            li.style.opacity = linkedin ? "1" : "0.3";
+            gh.style.opacity = github ? "1" : "0.3";
+        }
+
+        ["name","rollno","branch","year","skills","linkedin","github"].forEach(id => {
+            document.getElementById(id).addEventListener("input", updatePreview);
+        });
+
+        async function saveProfile() {
+            const token = getToken();
+            const name = document.getElementById("name").value.trim();
+            const rollno = document.getElementById("rollno").value.trim();
+            const branch = document.getElementById("branch").value;
+            const year = document.getElementById("year").value;
+            const skills = document.getElementById("skills").value.trim();
+            const linkedin = document.getElementById("linkedin").value.trim();
+            const github = document.getElementById("github").value.trim();
+
+            if (!name || !rollno || !branch || !year) {
+                showMsg("Please fill all required fields", true); return;
+            }
+
+            try {
+                await fetch(`${API}/auth/register`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    body: JSON.stringify({ name })
+                });
+            } catch(e) {}
+
+            try {
+                const exists = await fetch(`${API}/profile`, { headers: { "Authorization": `Bearer ${token}` } });
+                const method = exists.status === 404 ? "POST" : "PUT";
+                const url = method === "POST" ? `${API}/profile` : `${API}/profile`;
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    body: JSON.stringify({ rollno, branch, year, skills, linkedin, github })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showMsg("Profile saved successfully!", false);
+                    localStorage.setItem("userName", name);
+                } else {
+                    showMsg(data.message || "Error saving profile", true);
+                }
+            } catch (e) {
+                showMsg("Server error. Make sure backend is running.", true);
+            }
+        }
+
+        async function viewDirectory() {
+            document.getElementById("directoryModal").classList.remove("hidden");
+            document.getElementById("directoryModal").classList.add("flex");
+            await renderDirectory();
+        }
+
+        function closeDirectory() {
+            document.getElementById("directoryModal").classList.add("hidden");
+            document.getElementById("directoryModal").classList.remove("flex");
+        }
+
+        async function renderDirectory() {
+            const container = document.getElementById("directoryList");
+            const search = document.getElementById("searchStudents").value.toLowerCase();
+            try {
+                const token = getToken();
+                const res = await fetch(`${API}/profile/all`, { headers: { "Authorization": `Bearer ${token}` } });
+                const profiles = await res.json();
+                const filtered = profiles.filter(p => {
+                    const name = (p.user?.name || "").toLowerCase();
+                    const skills = (p.skills || "").toLowerCase();
+                    const branch = (p.branch || "").toLowerCase();
+                    return name.includes(search) || skills.includes(search) || branch.includes(search);
+                });
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-center py-8 col-span-2">No students found</div>';
+                    return;
+                }
+                container.innerHTML = filtered.map(p => `
+                    <div class="glass-card p-4 flex items-start gap-4">
+                        <div class="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl font-bold text-white">${(p.user?.name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-white font-bold">${p.user?.name || "Unknown"}</h3>
+                            <p class="text-white/60 text-sm">${p.rollno || ""} • ${p.branch || ""} • ${p.year || ""}</p>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                ${(p.skills || "").split(",").map(s => `<span class="px-2 py-0.5 bg-white/10 rounded-full text-white/60 text-xs">${s.trim()}</span>`).join("")}
+                            </div>
+                            <div class="flex gap-3 mt-2">
+                                ${p.linkedin ? `<a href="${p.linkedin}" target="_blank" class="text-blue-400 text-sm"><i class="fab fa-linkedin"></i></a>` : ""}
+                                ${p.github ? `<a href="${p.github}" target="_blank" class="text-white/60 text-sm"><i class="fab fa-github"></i></a>` : ""}
+                            </div>
+                        </div>
+                    </div>
+                `).join("");
+            } catch(e) {
+                container.innerHTML = '<div class="text-white/50 text-center py-8 col-span-2">Error loading profiles</div>';
+            }
+        }
+
+        function goToDashboard() {
+            const role = localStorage.getItem("userRole");
+            if (role === "faculty") window.location.href = "dashboard/pages/facultydashboard.html";
+            else window.location.href = "dashboard/studentdashboard.html";
+        }
+
+        document.getElementById("name").value = getUser().name || "";
+        loadProfile();
+        updatePreview();
+    </script>
+</body>
+</html>

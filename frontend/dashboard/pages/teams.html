@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams | Faculty Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+        }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 1.75rem;
+        }
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-left: 3px solid #667eea;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .bubble {
+            position: fixed;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatBubble linear infinite;
+            z-index: 0;
+        }
+        @keyframes floatBubble {
+            0% { transform: translateY(100vh) scale(0.3); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; position: fixed; z-index: 100; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        .team-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .team-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255,255,255,0.12);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="animated-bg relative overflow-x-hidden">
+    <div class="fixed inset-0 bg-black/30 -z-10"></div>
+    <div id="bubblesContainer" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <div class="min-h-screen flex relative z-10">
+        <!-- SIDEBAR -->
+        <aside class="sidebar w-72 glass-card fixed h-full overflow-y-auto shadow-2xl z-20">
+            <div class="p-6">
+                <div class="mb-8">
+                    <span class="text-xl font-bold text-white">CampusEvent</span>
+                    <p class="text-xs text-white/60">Faculty Portal</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <h3 id="facultyName" class="font-bold text-white text-lg">Faculty</h3>
+                    <p class="text-xs text-white/60">CSE Department</p>
+                </div>
+                <div class="space-y-1">
+                    <button onclick="setActivePage('dashboard')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-dashboard">Dashboard</button>
+                    <button onclick="setActivePage('manage')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-manage">Manage Events</button>
+                    <button onclick="setActivePage('create')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-create">Create Event</button>
+                    <button onclick="setActivePage('registrations')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-registrations">
+                        <span>Registrations</span>
+                        <span id="regBadge" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="setActivePage('teams')" class="sidebar-item active w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white font-medium" id="nav-teams">
+                        <span>Teams</span>
+                        <span id="teamBadge" class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="setActivePage('notifications')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-notifications">
+                        <span>Notifications</span>
+                        <span id="notifBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="setActivePage('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-settings">Settings</button>
+                </div>
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <button onclick="logout()" class="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 font-medium">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="flex-1 ml-72 p-8 main-content">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-white">TEAMS MANAGEMENT</h1>
+                <p class="text-white/70">Create teams manually or use AI skills-based formation</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="glass-card p-6 rounded-2xl mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="openManualTeam()" class="btn-primary py-4 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-users"></i> Manual Team
+                    </button>
+                    <button onclick="openAIFormation()" class="btn-success py-4 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-robot"></i> AI Formation
+                    </button>
+                    <button onclick="openUploadFile()" class="btn-primary py-4 rounded-xl text-white font-semibold flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+                        <i class="fas fa-upload"></i> Upload CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Teams Grid -->
+            <div id="teamsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-white/50 text-center py-12 col-span-full">Loading teams...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Manual Team Modal -->
+    <div id="manualModal" class="modal">
+        <div class="glass-card p-6 w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold text-white mb-4">Create Team Manually</h2>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Event</label>
+                <select id="manualEvent" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white"></select>
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Team Name</label>
+                <input type="text" id="manualName" placeholder="e.g., Team Alpha" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white">
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Members <span class="text-white/40 text-xs">(select students)</span></label>
+                <div id="manualStudents" class="space-y-2 max-h-40 overflow-y-auto"></div>
+            </div>
+            <button onclick="createManualTeam()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold">Create Team</button>
+            <button onclick="closeModal('manualModal')" class="w-full mt-2 py-2 text-white/60 hover:text-white">Cancel</button>
+        </div>
+    </div>
+
+    <!-- AI Formation Modal -->
+    <div id="aiModal" class="modal">
+        <div class="glass-card p-6 w-full max-w-lg mx-4">
+            <h2 class="text-2xl font-bold text-white mb-4"><i class="fas fa-robot mr-2"></i>AI Team Formation</h2>
+            <p class="text-white/60 text-sm mb-4">AI will form balanced teams based on skills: Frontend, UI/UX, AI Developer, Web Developer, etc.</p>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Event</label>
+                <select id="aiEvent" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white"></select>
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Team Size</label>
+                <select id="aiTeamSize" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white">
+                    <option value="3">3 members</option>
+                    <option value="4" selected>4 members</option>
+                    <option value="5">5 members</option>
+                </select>
+            </div>
+            <button onclick="formAITeams()" class="btn-success w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
+                <i class="fas fa-magic"></i> Form Teams with AI
+            </button>
+            <div id="aiResult" class="mt-4 hidden"></div>
+            <button onclick="closeModal('aiModal')" class="w-full mt-2 py-2 text-white/60 hover:text-white">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Upload CSV Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="glass-card p-6 w-full max-w-lg mx-4">
+            <h2 class="text-2xl font-bold text-white mb-4"><i class="fas fa-upload mr-2"></i>Upload Teams File</h2>
+            <p class="text-white/60 text-sm mb-4">Upload CSV with columns: studentId, teamName, role</p>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Event</label>
+                <select id="uploadEvent" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white"></select>
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-1">Paste CSV Data</label>
+                <textarea id="csvData" rows="6" placeholder="studentId,teamName,role&#10;uuid-1,Team A,Frontend&#10;uuid-2,Team A,Backend" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-sm"></textarea>
+            </div>
+            <button onclick="uploadTeamFile()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> Upload & Create Teams
+            </button>
+            <button onclick="closeModal('uploadModal')" class="w-full mt-2 py-2 text-white/60 hover:text-white">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const API = "/api";
+        function token() { return localStorage.getItem("token"); }
+        function logout() { if (confirm("Logout?")) { localStorage.clear(); window.location.href = "../../login.html"; } }
+
+        function setActivePage(page) {
+            const map = {
+                dashboard: "facultydashboard.html",
+                manage: "manage_events.html",
+                create: "../create_events.html",
+                registrations: "registrations.html",
+                teams: "teams.html",
+                notifications: "notifications.html",
+                settings: "settings.html"
+            };
+            if (map[page]) window.location.href = map[page];
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API}/events/faculty`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const events = await res.json();
+                ["manualEvent","aiEvent","uploadEvent"].forEach(id => {
+                    const sel = document.getElementById(id);
+                    sel.innerHTML = '<option value="">Select Event</option>' + events.map(e => `<option value="${e.id}">${e.title}</option>`).join("");
+                });
+                return events;
+            } catch(e) { return []; }
+        }
+
+        async function loadApprovedStudents(eventId) {
+            try {
+                const res = await fetch(`${API}/registrations/${eventId}`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const regs = await res.json();
+                return regs.filter(r => r.status === "approved");
+            } catch(e) { return []; }
+        }
+
+        async function openManualTeam() {
+            await loadEvents();
+            const ev = document.getElementById("manualEvent").value;
+            if (!ev) { alert("Select an event first"); return; }
+            const regs = await loadApprovedStudents(ev);
+            const container = document.getElementById("manualStudents");
+            if (regs.length === 0) {
+                container.innerHTML = '<div class="text-white/50 text-sm py-4">No approved registrations for this event</div>';
+            } else {
+                container.innerHTML = regs.map(r => `
+                    <label class="flex items-center gap-2 text-white/80 text-sm p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input type="checkbox" value="${r.student.id}" class="student-check">
+                        ${r.student.name} (${r.student.profile?.rollno || "N/A"})
+                    </label>
+                `).join("");
+            }
+            document.getElementById("manualModal").classList.add("active");
+        }
+
+        async function createManualTeam() {
+            const eventId = document.getElementById("manualEvent").value;
+            const name = document.getElementById("manualName").value.trim();
+            const checked = document.querySelectorAll(".student-check:checked");
+            if (!eventId || !name || checked.length === 0) { alert("Fill all fields and select members"); return; }
+            const members = Array.from(checked).map(c => ({ studentId: c.value }));
+
+            try {
+                const res = await fetch(`${API}/teams`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                    body: JSON.stringify({ eventId, name, members })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`Team "${name}" created!`);
+                    closeModal("manualModal");
+                    loadTeams();
+                } else { alert(data.message); }
+            } catch(e) { alert("Server error"); }
+        }
+
+        async function openAIFormation() {
+            await loadEvents();
+            document.getElementById("aiModal").classList.add("active");
+            document.getElementById("aiResult").classList.add("hidden");
+        }
+
+        async function formAITeams() {
+            const eventId = document.getElementById("aiEvent").value;
+            const teamSize = parseInt(document.getElementById("aiTeamSize").value);
+            if (!eventId) { alert("Select an event"); return; }
+
+            const btn = document.querySelector("#aiModal .btn-success");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Forming teams...';
+
+            try {
+                const res = await fetch(`${API}/teams/ai-form`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                    body: JSON.stringify({ eventId, teamSize })
+                });
+                const data = await res.json();
+                const resultDiv = document.getElementById("aiResult");
+                resultDiv.classList.remove("hidden");
+                if (res.ok) {
+                    resultDiv.className = "mt-4 p-3 bg-green-500/20 text-green-300 rounded-lg text-sm";
+                    resultDiv.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${data.message}!`;
+                    loadTeams();
+                } else {
+                    resultDiv.className = "mt-4 p-3 bg-red-500/20 text-red-300 rounded-lg text-sm";
+                    resultDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${data.message}`;
+                }
+            } catch(e) {
+                document.getElementById("aiResult").classList.remove("hidden");
+                document.getElementById("aiResult").className = "mt-4 p-3 bg-red-500/20 text-red-300 rounded-lg text-sm";
+                document.getElementById("aiResult").innerHTML = "Server error";
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-magic"></i> Form Teams with AI';
+        }
+
+        function openUploadFile() {
+            loadEvents();
+            document.getElementById("uploadModal").classList.add("active");
+        }
+
+        async function uploadTeamFile() {
+            const eventId = document.getElementById("uploadEvent").value;
+            const csv = document.getElementById("csvData").value.trim();
+            if (!eventId || !csv) { alert("Select event and paste CSV data"); return; }
+
+            const lines = csv.split("\n").filter(l => l.trim());
+            const teamsMap = {};
+            for (const line of lines) {
+                const parts = line.split(",").map(s => s.trim());
+                if (parts.length < 2) continue;
+                const [studentId, teamName, role] = parts;
+                if (!teamsMap[teamName]) teamsMap[teamName] = [];
+                teamsMap[teamName].push({ studentId, role: role || null });
+            }
+
+            const teams = Object.entries(teamsMap).map(([name, members]) => ({ name, members }));
+
+            try {
+                const res = await fetch(`${API}/teams/upload`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                    body: JSON.stringify({ eventId, teams })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`${data.message}`);
+                    closeModal("uploadModal");
+                    loadTeams();
+                } else { alert(data.message); }
+            } catch(e) { alert("Server error"); }
+        }
+
+        async function loadTeams() {
+            const container = document.getElementById("teamsContainer");
+            try {
+                const res = await fetch(`${API}/teams`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const teams = await res.json();
+                document.getElementById("teamBadge").textContent = teams.length;
+
+                if (teams.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-center py-12 col-span-full">No teams formed yet. Use AI or manual creation above.</div>';
+                    return;
+                }
+
+                container.innerHTML = teams.map(team => `
+                    <div class="team-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-white font-bold text-lg">${team.name}</h3>
+                            <span class="text-xs px-2 py-1 ${team.method === 'ai' ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'} rounded-full">${team.method === 'ai' ? 'AI' : 'Manual'}</span>
+                        </div>
+                        <p class="text-white/50 text-xs mb-3">${team.event?.title || "Event"} • ${team.members?.length || 0} members</p>
+                        <div class="space-y-2">
+                            ${(team.members || []).map(m => `
+                                <div class="flex items-center gap-2 text-sm">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        ${(m.student?.name || "?").charAt(0).toUpperCase()}
+                                    </div>
+                                    <span class="text-white">${m.student?.name || "Unknown"}</span>
+                                    ${m.role ? `<span class="text-white/40 text-xs">(${m.role})</span>` : ""}
+                                </div>
+                            `).join("")}
+                        </div>
+                    </div>
+                `).join("");
+            } catch(e) {
+                container.innerHTML = '<div class="text-white/50 text-center py-12 col-span-full">Error loading teams. Make sure backend is running.</div>';
+            }
+        }
+
+        // Load faculty name
+        const storedName = localStorage.getItem("userName");
+        if (storedName) document.getElementById("facultyName").textContent = storedName;
+
+        // Init
+        loadTeams();
+
+        // Bubbles
+        (function createBubbles() {
+            const c = document.getElementById('bubblesContainer');
+            if (!c) return;
+            for (let i = 0; i < 40; i++) {
+                const b = document.createElement('div');
+                b.className = 'bubble';
+                const s = Math.random() * 20 + 3;
+                b.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*14+6}s;animation-delay:${Math.random()*10}s;background:rgba(255,255,255,${Math.random()*0.4+0.1})`;
+                c.appendChild(b);
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Chat | Select & Chat | CampusEvent</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+        }
+        
+        .message-sent {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 1.5rem 1.5rem 0.5rem 1.5rem;
+        }
+        
+        .message-received {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 1.5rem 1.5rem 1.5rem 0.5rem;
+        }
+        
+        .team-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 0.75rem;
+            position: relative;
+        }
+        
+        .team-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+        
+        .team-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            border-left: 3px solid #667eea;
+        }
+        
+        .team-item.active::before {
+            content: '✓';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #10b981;
+            font-size: 14px;
+        }
+        
+        .member-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .member-item:hover { background: rgba(255, 255, 255, 0.05); }
+        
+        .file-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .file-item:hover { background: rgba(255, 255, 255, 0.05); }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .tab {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .animate-message { animation: message-pop 0.3s ease-out; }
+        
+        @keyframes message-pop {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .animate-bounce { animation: bounce 1.4s infinite; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); }
+        
+        @media (max-width: 768px) {
+            .sidebar-mobile { display: none; }
+        }
+        
+        /* Instruction highlight */
+        .instruction-highlight {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+        }
+    </style>
+</head>
+<body class="animated-bg min-h-screen">
+    
+    <div class="container mx-auto px-4 py-6 min-h-screen">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Header with Instructions -->
+            <div class="glass-card p-4 mb-4">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="text-2xl">💬</span>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">Team Collaboration Hub</h1>
+                            <p class="text-white/60 text-sm">Create teams • Select a team • Start chatting</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+                            <span class="text-yellow-400 text-sm">💡</span>
+                            <span class="text-white/70 text-xs">Click on any team below to start chatting</span>
+                        </div>
+                        <button onclick="openCreateTeamModal()" class="btn-primary px-5 py-2 rounded-xl text-white font-semibold flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            + New Team
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                
+                <!-- LEFT SIDEBAR - Teams List -->
+                <div class="md:col-span-3">
+                    <div class="glass-card p-4">
+                        <!-- Instructions Banner -->
+                        <div class="bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-xl p-3 mb-4 instruction-highlight">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">👇</span>
+                                <div>
+                                    <p class="text-white text-sm font-semibold">SELECT A TEAM TO CHAT</p>
+                                    <p class="text-white/50 text-xs">Click on any team name below</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabs -->
+                        <div class="flex gap-2 mb-4 border-b border-white/10">
+                            <button id="currentTeamsTab" class="tab active flex-1 py-2 text-white font-medium text-sm" onclick="showCurrentTeams()">
+                                📌 Active Teams
+                            </button>
+                            <button id="previousTeamsTab" class="tab flex-1 py-2 text-white/60 font-medium text-sm" onclick="showPreviousTeams()">
+                                📅 Previous Teams
+                            </button>
+                        </div>
+                        
+                        <!-- Current Teams List -->
+                        <div id="currentTeamsContainer">
+                            <h3 class="text-white/50 text-xs mb-2">ACTIVE TEAMS (Click to select)</h3>
+                            <div id="currentTeamsList" class="space-y-2 mb-4">
+                                <!-- Teams will appear here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Previous Teams List -->
+                        <div id="previousTeamsContainer" style="display: none;">
+                            <h3 class="text-white/50 text-xs mb-2">ARCHIVED TEAMS (View only)</h3>
+                            <div id="previousTeamsList" class="space-y-2 mb-4">
+                                <!-- Archived teams will appear here -->
+                            </div>
+                            <p class="text-white/40 text-xs text-center mt-2">📌 Archived teams are read-only</p>
+                        </div>
+                        
+                        <!-- Current User -->
+                        <div class="border-t border-white/10 pt-4 mt-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                    Y
+                                </div>
+                                <div>
+                                    <p class="text-white font-medium text-sm">You (Team Member)</p>
+                                    <p class="text-white/40 text-xs">Click on a team to start chatting</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CENTER: CHAT MESSAGES -->
+                <div class="md:col-span-6">
+                    <div class="glass-card flex flex-col" style="height: 600px;">
+                        <!-- Chat Header -->
+                        <div class="p-4 border-b border-white/10" id="chatHeader">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                        <span class="text-xl" id="chatIcon">💬</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-white font-semibold" id="chatTeamName">No Team Selected</h3>
+                                        <p class="text-white/40 text-xs" id="chatTeamInfo">Select a team from the left sidebar</p>
+                                    </div>
+                                </div>
+                                <div id="teamActions" style="display: none;">
+                                    <button onclick="archiveCurrentTeam()" class="btn-secondary px-3 py-1 rounded-lg text-white/70 text-xs flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                        Archive
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Messages Container -->
+                        <div class="flex-1 overflow-y-auto p-4 space-y-4" id="messagesContainer">
+                            <div class="text-center py-10">
+                                <div class="text-6xl mb-4">💬</div>
+                                <p class="text-white/50 text-lg">No team selected</p>
+                                <p class="text-white/30 text-sm mt-2">Click on a team from the left sidebar to start chatting</p>
+                                <button onclick="openCreateTeamModal()" class="btn-primary mt-4 px-4 py-2 rounded-lg text-white text-sm">
+                                    + Create a New Team
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Message Input (hidden until team selected) -->
+                        <div class="p-4 border-t border-white/10" id="messageInputArea" style="display: none;">
+                            <div class="flex gap-3">
+                                <button class="btn-secondary p-2 rounded-lg" onclick="alert('📎 Attach file coming soon!')">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                    </svg>
+                                </button>
+                                <input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-primary-500">
+                                <button id="sendBtn" class="btn-primary px-6 py-2 rounded-xl text-white font-semibold flex items-center gap-2">
+                                    Send
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- RIGHT SIDEBAR - Team Info -->
+                <div class="md:col-span-3">
+                    <div class="glass-card p-4" id="membersSidebar">
+                        <div class="text-center py-10">
+                            <div class="text-4xl mb-3">👥</div>
+                            <p class="text-white/50">No team selected</p>
+                            <p class="text-white/30 text-sm mt-2">Select a team to view members</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Team Modal -->
+    <div id="createTeamModal" class="modal">
+        <div class="glass-card p-6 w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold text-white mb-4">Create New Team</h2>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-2">Team Name *</label>
+                <input type="text" id="newTeamName" placeholder="e.g., Code Warriors, AI Avengers" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-primary-500">
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-2">Event Name</label>
+                <input type="text" id="newTeamEvent" placeholder="e.g., AI Hackathon 2025" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-primary-500">
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-2">Team Type</label>
+                <select id="newTeamType" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white">
+                    <option value="current">Active Team (Can Chat)</option>
+                    <option value="previous">Archived Team (Read Only)</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label class="text-white/80 text-sm block mb-2">Add Team Members (Optional)</label>
+                <input type="text" id="newTeamMembers" placeholder="Enter names separated by commas" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-white/40">
+                <p class="text-white/40 text-xs mt-1">You can add more members later</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeCreateTeamModal()" class="flex-1 btn-secondary px-4 py-2 rounded-xl text-white">Cancel</button>
+                <button onclick="createTeam()" class="flex-1 btn-primary px-4 py-2 rounded-xl text-white font-semibold">Create Team</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Member Modal -->
+    <div id="addMemberModal" class="modal">
+        <div class="glass-card p-6 w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold text-white mb-4">Add Team Member</h2>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-2">Member Name</label>
+                <input type="text" id="newMemberName" placeholder="Enter member name" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white">
+            </div>
+            <div class="mb-4">
+                <label class="text-white/80 text-sm block mb-2">Member Role (Optional)</label>
+                <input type="text" id="newMemberRole" placeholder="e.g., Frontend Developer" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white">
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeAddMemberModal()" class="flex-1 btn-secondary px-4 py-2 rounded-xl text-white">Cancel</button>
+                <button onclick="addMemberToTeam()" class="flex-1 btn-primary px-4 py-2 rounded-xl text-white font-semibold">Add Member</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Data Storage
+        let teams = { current: [], previous: [] };
+        let currentTeamId = null;
+        let currentTab = 'current';
+        
+        // Load teams
+        function loadTeams() {
+            const saved = localStorage.getItem('teams_data_v2');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                teams.current = parsed.current || [];
+                teams.previous = parsed.previous || [];
+            } else {
+                // Demo data
+                teams.current = [{
+                    id: 'team1', name: 'Code Warriors', event: 'AI Hackathon 2025', type: 'current',
+                    members: [
+                        { id: 'm1', name: 'Samuel', role: 'Frontend Dev', isOnline: true, avatar: 'S' },
+                        { id: 'm2', name: 'John', role: 'Backend Dev', isOnline: true, avatar: 'J' },
+                        { id: 'm3', name: 'Priya', role: 'ML Engineer', isOnline: true, avatar: 'P' },
+                        { id: 'current_user', name: 'You', role: 'Team Lead', isOnline: true, avatar: 'Y' }
+                    ],
+                    messages: [
+                        { id: 'msg1', senderId: 'm1', senderName: 'Samuel', text: 'Hello team! Ready for the meeting?', time: '10:42 AM', type: 'received' },
+                        { id: 'msg2', senderId: 'm2', senderName: 'John', text: 'Ready! Let\'s finalize the structure.', time: '10:43 AM', type: 'received' },
+                        { id: 'msg3', senderId: 'current_user', senderName: 'You', text: 'Great! Frontend is ready.', time: '10:45 AM', type: 'sent' },
+                        { id: 'msg4', senderId: 'm3', senderName: 'Priya', text: 'Working on backend API now.', time: '10:47 AM', type: 'received' }
+                    ],
+                    files: [{ name: 'project-proposal.pdf', size: '2.4 MB', uploadedBy: 'Samuel' }]
+                }];
+                teams.previous = [{
+                    id: 'team2', name: 'AI Avengers', event: 'Tech Ideathon 2024', type: 'previous',
+                    members: [
+                        { id: 'm4', name: 'Raj', role: 'UI Designer', isOnline: false, avatar: 'R' },
+                        { id: 'current_user', name: 'You', role: 'AI Specialist', isOnline: false, avatar: 'Y' }
+                    ],
+                    messages: [{ id: 'msg5', senderId: 'm4', senderName: 'Raj', text: 'Great teamwork!', time: 'Dec 15, 2024', type: 'received' }],
+                    files: [{ name: 'final-presentation.pptx', size: '8.5 MB', uploadedBy: 'Raj' }]
+                }];
+                saveTeams();
+            }
+            renderTeamsList();
+        }
+        
+        function saveTeams() { localStorage.setItem('teams_data_v2', JSON.stringify(teams)); }
+        
+        function showCurrentTeams() {
+            currentTab = 'current';
+            document.getElementById('currentTeamsTab').classList.add('active');
+            document.getElementById('previousTeamsTab').classList.remove('active');
+            document.getElementById('currentTeamsContainer').style.display = 'block';
+            document.getElementById('previousTeamsContainer').style.display = 'none';
+            renderTeamsList();
+            if (!teams.current.some(t => t.id === currentTeamId)) clearChat();
+        }
+        
+        function showPreviousTeams() {
+            currentTab = 'previous';
+            document.getElementById('previousTeamsTab').classList.add('active');
+            document.getElementById('currentTeamsTab').classList.remove('active');
+            document.getElementById('previousTeamsContainer').style.display = 'block';
+            document.getElementById('currentTeamsContainer').style.display = 'none';
+            renderTeamsList();
+            if (!teams.previous.some(t => t.id === currentTeamId)) clearChat();
+        }
+        
+        function renderTeamsList() {
+            const currentContainer = document.getElementById('currentTeamsList');
+            const previousContainer = document.getElementById('previousTeamsList');
+            
+            if (teams.current.length === 0) {
+                currentContainer.innerHTML = '<div class="text-white/40 text-sm text-center py-4">✨ No active teams. Create one!</div>';
+            } else {
+                currentContainer.innerHTML = teams.current.map(team => `
+                    <div class="team-item p-3 ${currentTeamId === team.id && currentTab === 'current' ? 'active bg-white/10' : ''}" onclick="selectTeam('${team.id}', 'current')">
+                        <div class="flex items-center justify-between">
+                            <div><div class="flex items-center gap-2"><span class="text-lg">👥</span><p class="text-white font-medium">${escapeHtml(team.name)}</p></div><p class="text-white/40 text-xs mt-1">${team.event || 'No event'} • ${team.members.length} members</p></div>
+                            <div class="text-white/40 text-xs">${currentTeamId === team.id ? '✓ Selected' : 'Click to chat'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            if (teams.previous.length === 0) {
+                previousContainer.innerHTML = '<div class="text-white/40 text-sm text-center py-4">📦 No archived teams</div>';
+            } else {
+                previousContainer.innerHTML = teams.previous.map(team => `
+                    <div class="team-item p-3 ${currentTeamId === team.id && currentTab === 'previous' ? 'active bg-white/10' : ''}" onclick="selectTeam('${team.id}', 'previous')">
+                        <div class="flex items-center justify-between">
+                            <div><div class="flex items-center gap-2"><span class="text-lg">📅</span><p class="text-white font-medium">${escapeHtml(team.name)}</p></div><p class="text-white/40 text-xs mt-1">${team.event || 'No event'} • ${team.members.length} members</p></div>
+                            <div class="text-white/40 text-xs">🔒 Read only</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function selectTeam(teamId, type) {
+            currentTeamId = teamId;
+            const team = type === 'current' ? teams.current.find(t => t.id === teamId) : teams.previous.find(t => t.id === teamId);
+            if (!team) return;
+            
+            renderTeamsList();
+            renderChat(team);
+            renderMembersSidebar(team, type);
+            
+            const isActive = type === 'current';
+            document.getElementById('messageInputArea').style.display = isActive ? 'flex' : 'none';
+            document.getElementById('teamActions').style.display = isActive ? 'flex' : 'none';
+            document.getElementById('chatTeamName').textContent = team.name;
+            document.getElementById('chatTeamInfo').textContent = `${team.members.length} members • ${team.event || 'No event'}${!isActive ? ' • Archived (Read Only)' : ''}`;
+        }
+        
+        function clearChat() {
+            document.getElementById('messagesContainer').innerHTML = `
+                <div class="text-center py-10">
+                    <div class="text-6xl mb-4">💬</div>
+                    <p class="text-white/50 text-lg">No team selected</p>
+                    <p class="text-white/30 text-sm mt-2">Click on a team from the left sidebar to start chatting</p>
+                </div>
+            `;
+            document.getElementById('membersSidebar').innerHTML = `
+                <div class="text-center py-10">
+                    <div class="text-4xl mb-3">👥</div>
+                    <p class="text-white/50">No team selected</p>
+                    <p class="text-white/30 text-sm mt-2">Select a team to view members</p>
+                </div>
+            `;
+            document.getElementById('messageInputArea').style.display = 'none';
+            document.getElementById('teamActions').style.display = 'none';
+            document.getElementById('chatTeamName').textContent = 'No Team Selected';
+            document.getElementById('chatTeamInfo').textContent = 'Select a team from the left sidebar';
+        }
+        
+        function renderChat(team) {
+            const container = document.getElementById('messagesContainer');
+            if (!team.messages || team.messages.length === 0) {
+                container.innerHTML = '<div class="text-center text-white/50 py-10">✨ No messages yet. Start the conversation!</div>';
+                return;
+            }
+            container.innerHTML = team.messages.map(msg => `
+                <div class="flex items-start gap-3 ${msg.type === 'sent' ? 'justify-end' : ''} animate-message">
+                    ${msg.type !== 'sent' ? `<div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-xs font-bold">${msg.senderName.charAt(0)}</div>` : ''}
+                    <div class="${msg.type === 'sent' ? 'text-right' : ''}" style="max-width: 70%;">
+                        ${msg.type !== 'sent' ? `<div class="flex items-center gap-2 mb-1"><span class="text-white font-semibold text-sm">${escapeHtml(msg.senderName)}</span><span class="text-white/40 text-xs">${msg.time}</span></div>` : ''}
+                        <div class="${msg.type === 'sent' ? 'message-sent' : 'message-received'} p-3"><p class="text-white/90 text-sm">${escapeHtml(msg.text)}</p></div>
+                        ${msg.type === 'sent' ? `<div class="flex items-center justify-end gap-2 mt-1"><span class="text-white/40 text-xs">${msg.time}</span><span class="text-white font-semibold text-sm">You</span></div>` : ''}
+                    </div>
+                    ${msg.type === 'sent' ? `<div class="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">Y</div>` : ''}
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function renderMembersSidebar(team, type) {
+            const container = document.getElementById('membersSidebar');
+            const isReadOnly = type === 'previous';
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-white font-semibold mb-3 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>👥 MEMBERS <span class="text-white/40 text-xs">(${team.members.length})</span></h3>
+                    <div class="space-y-2">${team.members.map(member => `
+                        <div class="member-item flex items-center justify-between p-2 rounded-lg" onclick="alert('Profile: ${member.name}')">
+                            <div class="flex items-center gap-3"><div class="relative"><div class="w-10 h-10 bg-gradient-to-r ${member.id === 'current_user' ? 'from-indigo-600 to-purple-600' : 'from-blue-500 to-cyan-500'} rounded-full flex items-center justify-center text-white font-bold">${member.avatar}</div><div class="absolute bottom-0 right-0 w-3 h-3 ${member.isOnline ? 'bg-green-500' : 'bg-gray-500'} rounded-full border-2 border-gray-900"></div></div><div><p class="text-white font-medium text-sm">${escapeHtml(member.name)}</p><p class="text-white/40 text-xs">${member.role || 'Member'}</p></div></div>
+                            <span class="${member.isOnline ? 'text-green-400' : 'text-gray-400'} text-xs">${member.isOnline ? '● Online' : '○ Offline'}</span>
+                        </div>
+                    `).join('')}</div>
+                </div>
+                <div class="border-t border-white/10 pt-4"><h3 class="text-white font-semibold mb-3 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>📎 FILES</h3>
+                    <div class="space-y-2 mb-4">${team.files && team.files.length > 0 ? team.files.map(file => `<div class="file-item flex items-center justify-between p-2 rounded-lg cursor-pointer" onclick="alert('Download: ${file.name}')"><div class="flex items-center gap-2"><span class="text-lg">📄</span><span class="text-white/80 text-sm">${escapeHtml(file.name)}</span></div><span class="text-white/40 text-xs">${file.size}</span></div>`).join('') : '<div class="text-white/40 text-sm text-center py-2">No files shared</div>'}</div>
+                    ${!isReadOnly ? `<button onclick="openAddMemberModal()" class="w-full btn-secondary px-4 py-2 rounded-lg text-white text-sm flex items-center justify-center gap-2 mb-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>Add Member</button><button class="w-full btn-secondary px-4 py-2 rounded-lg text-white text-sm flex items-center justify-center gap-2" onclick="alert('Upload file coming soon!')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>Upload File</button>` : '<p class="text-white/40 text-xs text-center mt-2">🔒 Archived team - Read only</p>'}
+                </div>
+            `;
+        }
+        
+        function createTeam() {
+            const teamName = document.getElementById('newTeamName').value.trim();
+            if (!teamName) { alert('Please enter a team name'); return; }
+            
+            const newTeam = {
+                id: 'team_' + Date.now(), name: teamName, event: document.getElementById('newTeamEvent').value.trim() || 'No event',
+                type: document.getElementById('newTeamType').value, members: [{ id: 'current_user', name: 'You', role: 'Team Lead', isOnline: true, avatar: 'Y' }],
+                messages: [], files: []
+            };
+            
+            const membersInput = document.getElementById('newTeamMembers').value.trim();
+            if (membersInput) {
+                membersInput.split(',').map(m => m.trim()).filter(m => m).forEach((name, i) => {
+                    newTeam.members.push({ id: 'm_' + Date.now() + '_' + i, name: name, role: 'Member', isOnline: false, avatar: name.charAt(0).toUpperCase() });
+                });
+            }
+            
+            if (newTeam.type === 'current') teams.current.push(newTeam);
+            else teams.previous.push(newTeam);
+            
+            saveTeams();
+            renderTeamsList();
+            closeCreateTeamModal();
+            if (newTeam.type === 'current') showCurrentTeams();
+            else showPreviousTeams();
+            selectTeam(newTeam.id, newTeam.type);
+            
+            document.getElementById('newTeamName').value = '';
+            document.getElementById('newTeamEvent').value = '';
+            document.getElementById('newTeamMembers').value = '';
+        }
+        
+        function archiveCurrentTeam() {
+            if (!currentTeamId) return;
+            const idx = teams.current.findIndex(t => t.id === currentTeamId);
+            if (idx !== -1) {
+                const archived = teams.current[idx];
+                archived.type = 'previous';
+                teams.previous.push(archived);
+                teams.current.splice(idx, 1);
+                saveTeams();
+                currentTeamId = null;
+                showCurrentTeams();
+                clearChat();
+                alert('Team archived!');
+            }
+        }
+        
+        function sendMessage() {
+            if (!currentTeamId) { alert('Select a team first'); return; }
+            if (currentTab === 'previous') { alert('Archived teams are read-only'); return; }
+            const input = document.getElementById('messageInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            const idx = teams.current.findIndex(t => t.id === currentTeamId);
+            if (idx === -1) return;
+            teams.current[idx].messages.push({ id: 'msg_' + Date.now(), senderId: 'current_user', senderName: 'You', text: msg, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), type: 'sent' });
+            saveTeams();
+            renderChat(teams.current[idx]);
+            input.value = '';
+        }
+        
+        let currentTeamForMember = null;
+        function openAddMemberModal() { if (!currentTeamId) { alert('Select a team first'); return; } currentTeamForMember = currentTeamId; document.getElementById('addMemberModal').classList.add('active'); document.getElementById('newMemberName').value = ''; document.getElementById('newMemberRole').value = ''; }
+        function closeAddMemberModal() { document.getElementById('addMemberModal').classList.remove('active'); currentTeamForMember = null; }
+        function addMemberToTeam() {
+            const name = document.getElementById('newMemberName').value.trim();
+            if (!name) { alert('Enter member name'); return; }
+            const idx = teams.current.findIndex(t => t.id === currentTeamForMember);
+            if (idx !== -1) {
+                teams.current[idx].members.push({ id: 'm_' + Date.now(), name: name, role: document.getElementById('newMemberRole').value.trim() || 'Member', isOnline: false, avatar: name.charAt(0).toUpperCase() });
+                saveTeams();
+                selectTeam(currentTeamForMember, 'current');
+                closeAddMemberModal();
+            }
+        }
+        
+        function openCreateTeamModal() { document.getElementById('createTeamModal').classList.add('active'); }
+        function closeCreateTeamModal() { document.getElementById('createTeamModal').classList.remove('active'); }
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        
+        loadTeams();
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+        window.onclick = e => { if (e.target === document.getElementById('createTeamModal')) closeCreateTeamModal(); if (e.target === document.getElementById('addMemberModal')) closeAddMemberModal(); };
+    </script>
+</body>
+</html>

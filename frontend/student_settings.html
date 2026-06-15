@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | CampusEvent</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+        }
+        
+        .setting-item {
+            transition: all 0.3s ease;
+        }
+        
+        .setting-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+    </style>
+</head>
+<body class="animated-bg min-h-screen">
+    
+    <div class="container mx-auto px-4 py-6">
+        <div class="max-w-3xl mx-auto">
+            
+            <!-- Header -->
+            <div class="glass-card p-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <span class="text-2xl">⚙️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Settings</h1>
+                        <p class="text-white/60 text-sm">Manage your account preferences</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Sections -->
+            <div class="space-y-4">
+                
+                <!-- Profile Settings -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 border-b border-white/10">
+                        <h2 class="text-white font-semibold flex items-center gap-2">
+                            <span>👤</span> Profile Settings
+                        </h2>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Full Name</p>
+                                <p class="text-white/40 text-sm">Samuel Moses</p>
+                            </div>
+                            <button onclick="editField('Full Name')" class="text-blue-400 hover:text-blue-300 text-sm">Edit</button>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Email Address</p>
+                                <p class="text-white/40 text-sm">samuel@example.com</p>
+                            </div>
+                            <button onclick="editField('Email')" class="text-blue-400 hover:text-blue-300 text-sm">Edit</button>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Phone Number</p>
+                                <p class="text-white/40 text-sm">+91 98765 43210</p>
+                            </div>
+                            <button onclick="editField('Phone Number')" class="text-blue-400 hover:text-blue-300 text-sm">Edit</button>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Roll Number</p>
+                                <p class="text-white/40 text-sm">CS2024001</p>
+                            </div>
+                            <button onclick="editField('Roll Number')" class="text-blue-400 hover:text-blue-300 text-sm">Edit</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Settings -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 border-b border-white/10">
+                        <h2 class="text-white font-semibold flex items-center gap-2">
+                            <span>🔒</span> Security
+                        </h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Change Password</p>
+                                <p class="text-white/40 text-sm">Last changed 30 days ago</p>
+                            </div>
+                            <button onclick="changePassword()" class="btn-primary px-4 py-2 rounded-lg text-white text-sm">Change</button>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Two-Factor Authentication</p>
+                                <p class="text-white/40 text-sm">Add an extra layer of security</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="twoFactorToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification Preferences -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 border-b border-white/10">
+                        <h2 class="text-white font-semibold flex items-center gap-2">
+                            <span>🔔</span> Notification Preferences
+                        </h2>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Email Notifications</p>
+                                <p class="text-white/40 text-sm">Receive updates via email</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailNotif" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Team Updates</p>
+                                <p class="text-white/40 text-sm">Get notified about team activities</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="teamNotif" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Event Reminders</p>
+                                <p class="text-white/40 text-sm">Reminders for upcoming events</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="eventNotif" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Marketing Communications</p>
+                                <p class="text-white/40 text-sm">Newsletters and promotions</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="marketingNotif">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Privacy Settings -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 border-b border-white/10">
+                        <h2 class="text-white font-semibold flex items-center gap-2">
+                            <span>🛡️</span> Privacy
+                        </h2>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Profile Visibility</p>
+                                <p class="text-white/40 text-sm">Who can see your profile</p>
+                            </div>
+                            <select id="privacySelect" class="bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-white text-sm">
+                                <option value="public">Public</option>
+                                <option value="team" selected>Team Members Only</option>
+                                <option value="private">Private</option>
+                            </select>
+                        </div>
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Show Online Status</p>
+                                <p class="text-white/40 text-sm">Let others see when you're online</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="onlineStatus" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Danger Zone -->
+                <div class="glass-card overflow-hidden border-red-500/30">
+                    <div class="p-4 border-b border-white/10 bg-red-500/10">
+                        <h2 class="text-red-400 font-semibold flex items-center gap-2">
+                            <span>⚠️</span> Danger Zone
+                        </h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="setting-item flex items-center justify-between p-3 rounded-lg">
+                            <div>
+                                <p class="text-white font-medium">Delete Account</p>
+                                <p class="text-white/40 text-sm">Permanently delete your account and all data</p>
+                            </div>
+                            <button onclick="deleteAccount()" class="btn-danger px-4 py-2 rounded-lg text-red-400 text-sm">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Button -->
+                <div class="flex justify-end">
+                    <button onclick="saveSettings()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold">
+                        Save All Changes
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Load saved settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('userSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                document.getElementById('emailNotif').checked = settings.emailNotif ?? true;
+                document.getElementById('teamNotif').checked = settings.teamNotif ?? true;
+                document.getElementById('eventNotif').checked = settings.eventNotif ?? true;
+                document.getElementById('marketingNotif').checked = settings.marketingNotif ?? false;
+                document.getElementById('twoFactorToggle').checked = settings.twoFactor ?? false;
+                document.getElementById('onlineStatus').checked = settings.onlineStatus ?? true;
+                document.getElementById('privacySelect').value = settings.privacy ?? 'team';
+            }
+        }
+        
+        // Save settings
+        function saveSettings() {
+            const settings = {
+                emailNotif: document.getElementById('emailNotif').checked,
+                teamNotif: document.getElementById('teamNotif').checked,
+                eventNotif: document.getElementById('eventNotif').checked,
+                marketingNotif: document.getElementById('marketingNotif').checked,
+                twoFactor: document.getElementById('twoFactorToggle').checked,
+                onlineStatus: document.getElementById('onlineStatus').checked,
+                privacy: document.getElementById('privacySelect').value
+            };
+            
+            localStorage.setItem('userSettings', JSON.stringify(settings));
+            alert('✅ Settings saved successfully!');
+        }
+        
+        // Edit field
+        function editField(field) {
+            const newValue = prompt(`Enter new ${field}:`);
+            if (newValue) {
+                alert(`✅ ${field} updated to: ${newValue}`);
+                // In real app, send to backend
+            }
+        }
+        
+        // Change password
+        function changePassword() {
+            const currentPassword = prompt('Enter current password:');
+            if (currentPassword) {
+                const newPassword = prompt('Enter new password:');
+                if (newPassword) {
+                    const confirmPassword = prompt('Confirm new password:');
+                    if (newPassword === confirmPassword) {
+                        alert('✅ Password changed successfully!');
+                    } else {
+                        alert('❌ Passwords do not match!');
+                    }
+                }
+            }
+        }
+        
+        // Delete account
+        function deleteAccount() {
+            const confirm = window.confirm('⚠️ WARNING: This action is permanent! Are you sure you want to delete your account?');
+            if (confirm) {
+                const verify = window.confirm('Type "DELETE" to confirm:');
+                if (verify) {
+                    alert('Account deleted. Redirecting to home page...');
+                    // Redirect to home page
+                    window.location.href = '/';
+                }
+            }
+        }
+        
+        // Load settings on page load
+        loadSettings();
+    </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+  role     String @default("student")
+
+  profile      StudentProfile?
+  registrations Registration[]
+  teams        TeamMember[]
+  notifications Notification[]
+  createdEvents Event[]          @relation("FacultyEvents")
+}
+
+model StudentProfile {
+  id       String @id @default(uuid())
+  userId   String @unique
+  rollno   String
+  branch   String
+  year     String
+  skills   String
+  linkedin String?
+  github   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String
+  createdAt   DateTime @default(now())
+  facultyId   String?
+  faculty     User?    @relation("FacultyEvents", fields: [facultyId], references: [id])
+
+  registrations Registration[]
+  teams         Team[]
+  notifications Notification[]
+}
+
+model Registration {
+  id        String   @id @default(uuid())
+  studentId String
+  eventId   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  student User  @relation(fields: [studentId], references: [id])
+  event   Event @relation(fields: [eventId], references: [id])
+
+  @@unique([studentId, eventId])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  eventId   String
+  name      String
+  method    String   @default("manual")
+  createdAt DateTime @default(now())
+
+  event   Event        @relation(fields: [eventId], references: [id])
+  members TeamMember[]
+}
+
+model TeamMember {
+  id        String @id @default(uuid())
+  teamId    String
+  studentId String
+  role      String?
+
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  student User @relation(fields: [studentId], references: [id])
+
+  @@unique([teamId, studentId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  type      String
+  relatedId String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [relatedId], references: [id])
+}

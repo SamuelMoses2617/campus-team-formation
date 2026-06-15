@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Login • Campus Event Team Formation</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Animated Gradient Background */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        @keyframes floatReverse {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(20px) rotate(-5deg); }
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.6); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        .floating-element { animation: float 6s ease-in-out infinite; }
+        .floating-element-reverse { animation: floatReverse 7s ease-in-out infinite; }
+        
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 200% auto;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -10px rgba(102, 126, 234, 0.5);
+            background-position: right center;
+        }
+        
+        .btn-primary:active { transform: translateY(0); }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Particle animation */
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatParticle linear infinite;
+        }
+        
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; }
+        
+        /* Glassmorphism Login Card */
+        .glass-login-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 50px -15px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            width: 90%;
+            max-width: 450px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        /* Input fields with glass styling */
+        .input-field input, .modal-input {
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .input-field input:focus, .modal-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: white;
+            outline: none;
+        }
+        
+        /* Label styling for glass theme */
+        .glass-label {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+        
+        /* Social buttons with glass styling */
+        .glass-social-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .glass-social-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .glass-link {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .glass-link:hover {
+            color: white;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        /* Close button */
+        .close-modal {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="relative overflow-x-hidden min-h-screen flex items-center justify-center">
+    <!-- Animated Background -->
+    <div class="animated-bg fixed inset-0 -z-20"></div>
+    <div class="absolute inset-0 bg-black/20 -z-15"></div>
+    
+    <!-- Animated Particles -->
+    <div id="particles" class="fixed inset-0 -z-10"></div>
+    
+    <!-- Floating Shapes -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div class="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl floating-element"></div>
+        <div class="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl floating-element-reverse"></div>
+        <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-pink-500/20 rounded-full blur-2xl floating-element" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-28 h-28 bg-blue-500/20 rounded-full blur-2xl floating-element-reverse" style="animation-delay: 3s;"></div>
+    </div>
+    
+    <!-- Login Container -->
+    <div class="container max-w-md mx-4 relative z-10 animate-fade-in-up">
+        <div class="glass-login-card p-8 md:p-10">
+            <!-- Logo / Brand -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="fas fa-calendar-alt text-3xl text-white"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Welcome</h2>
+                <p class="text-white/70 text-sm mt-1">Login to your account</p>
+            </div>
+            
+            <!-- Email Field -->
+            <div class="input-field mb-5">
+                <label class="block glass-label text-sm font-semibold mb-2">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com" class="w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            
+            <!-- Password Field -->
+            <div class="input-field mb-3">
+                <label class="block glass-label text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" class="w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            
+            <!-- Forgot Password Link -->
+            <div class="text-right mb-6">
+                <a href="#" class="text-sm glass-link font-medium">Forgot password?</a>
+            </div>
+            
+            <!-- Login Button -->
+            <button onclick="login()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-lg shadow-lg shimmer">
+                <i class="fas fa-sign-in-alt mr-2"></i> Login
+            </button>
+            
+            <!-- Social Login Section -->
+            <div class="mt-6">
+                <button class="glass-social-btn w-full py-3 rounded-xl flex items-center justify-center gap-3 transition">
+                    <i class="fab fa-google text-white"></i>
+                    <span class="font-medium text-white">Sign in with Google</span>
+                </button>
+            </div>
+            
+            <!-- Sign Up Link - Opens Modal with Confirm Password -->
+            <p class="text-center text-sm text-white/70 mt-6">
+                Don't have an account? <span onclick="openSignupModal()" class="text-white font-semibold hover:underline cursor-pointer">Sign up</span>
+            </p>
+            
+            <!-- Message Area -->
+            <div id="msg" class="mt-4 p-3 rounded-lg text-center text-sm hidden backdrop-blur-sm"></div>
+            
+            <!-- Demo Hint -->
+            <div class="mt-4 text-center text-xs text-white/50">
+                <i class="fas fa-info-circle"></i> Demo: student@example.com / any password
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sign Up Modal with Confirm Password -->
+    <div id="signupModal" class="modal-overlay">
+        <div class="modal-content p-8 md:p-10">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Create Account</h2>
+                <button onclick="closeSignupModal()" class="close-modal text-white/80 hover:text-white text-2xl w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
+            </div>
+            
+            <!-- Full Name Field -->
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">Full Name</label>
+                <input type="text" id="signupName" placeholder="John Doe" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            
+            <!-- Email Field -->
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">Email Address</label>
+                <input type="email" id="signupEmail" placeholder="you@example.com" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            
+            <!-- Password Field -->
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a password" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            
+            <!-- Confirm Password Field -->
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">Confirm Password</label>
+                <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            
+            <!-- Role Selection -->
+            <div class="mb-6">
+                <label class="block glass-label text-sm font-semibold mb-2">I am a</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 text-white/90 cursor-pointer">
+                        <input type="radio" name="role" value="student" checked class="w-4 h-4"> Student
+                    </label>
+                    <label class="flex items-center gap-2 text-white/90 cursor-pointer">
+                        <input type="radio" name="role" value="faculty" class="w-4 h-4"> Faculty
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Sign Up Button -->
+            <button onclick="handleSignup()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-lg shadow-lg shimmer">
+                <i class="fas fa-user-plus mr-2"></i> Sign Up
+            </button>
+            
+            <!-- Modal Message Area -->
+            <div id="modalMsg" class="mt-4 p-3 rounded-lg text-center text-sm hidden backdrop-blur-sm"></div>
+            
+            <p class="text-center text-xs text-white/50 mt-4">
+                By signing up, you agree to our Terms of Service
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+            const particleCount = 50;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = Math.random() * 10 + 5 + 's';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.background = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.1})`;
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Show message in login form
+        function showMessage(message, isError = false) {
+            const msgDiv = document.getElementById('msg');
+            msgDiv.innerHTML = isError 
+                ? `<i class="fas fa-exclamation-triangle mr-2"></i> ${message}`
+                : `<i class="fas fa-check-circle mr-2"></i> ${message}`;
+            msgDiv.classList.remove('hidden', 'bg-green-500/30', 'text-green-100', 'bg-red-500/30', 'text-red-100', 'bg-blue-500/30', 'text-blue-100');
+            
+            if (isError) {
+                msgDiv.classList.add('bg-red-500/30', 'text-red-100', 'backdrop-blur-sm');
+            } else {
+                msgDiv.classList.add('bg-green-500/30', 'text-green-100', 'backdrop-blur-sm');
+            }
+            
+            if (!isError) {
+                setTimeout(() => {
+                    if (msgDiv.innerHTML.includes('Welcome') || msgDiv.innerHTML.includes('Success')) {
+                        msgDiv.classList.add('hidden');
+                    }
+                }, 3000);
+            }
+        }
+        
+        // Show message in modal
+        function showModalMessage(message, isError = false) {
+            const msgDiv = document.getElementById('modalMsg');
+            msgDiv.innerHTML = isError 
+                ? `<i class="fas fa-exclamation-triangle mr-2"></i> ${message}`
+                : `<i class="fas fa-check-circle mr-2"></i> ${message}`;
+            msgDiv.classList.remove('hidden', 'bg-green-500/30', 'text-green-100', 'bg-red-500/30', 'text-red-100', 'bg-blue-500/30', 'text-blue-100');
+            
+            if (isError) {
+                msgDiv.classList.add('bg-red-500/30', 'text-red-100', 'backdrop-blur-sm');
+            } else {
+                msgDiv.classList.add('bg-green-500/30', 'text-green-100', 'backdrop-blur-sm');
+            }
+            
+            setTimeout(() => {
+                msgDiv.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Open Signup Modal
+        function openSignupModal() {
+            document.getElementById('signupModal').classList.add('active');
+            // Clear previous inputs
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupEmail').value = '';
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('signupConfirmPassword').value = '';
+            document.getElementById('modalMsg').classList.add('hidden');
+        }
+        
+        // Close Signup Modal
+        function closeSignupModal() {
+            document.getElementById('signupModal').classList.remove('active');
+        }
+        
+        // Handle Signup with Confirm Password Validation
+        async function handleSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const role = document.querySelector('input[name="role"]:checked').value;
+            
+            // Validation
+            if (!name) {
+                showModalMessage("Please enter your full name", true);
+                return;
+            }
+            if (!email) {
+                showModalMessage("Please enter your email address", true);
+                return;
+            }
+            if (!email.includes('@') || !email.includes('.')) {
+                showModalMessage("Please enter a valid email address", true);
+                return;
+            }
+            if (!password) {
+                showModalMessage("Please create a password", true);
+                return;
+            }
+            if (password.length < 6) {
+                showModalMessage("Password must be at least 6 characters", true);
+                return;
+            }
+            // Confirm Password Validation
+            if (password !== confirmPassword) {
+                showModalMessage("Passwords do not match! Please confirm your password.", true);
+                return;
+            }
+            
+            // Show loading state
+            const signupBtn = document.querySelector('#signupModal .btn-primary');
+            const originalBtnText = signupBtn.innerHTML;
+            signupBtn.innerHTML = '<i class="fas fa-spinner fa-pulse mr-2"></i> Creating Account...';
+            signupBtn.disabled = true;
+            
+            // Simulate signup API call (since backend endpoint is for login, we'll demo)
+            try {
+    const response = await fetch(
+        "/api/auth/register",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                password,
+                role
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+        showModalMessage(
+            "Account created successfully!",
+            false
+        );
+
+        document.getElementById("email").value = email;
+
+        setTimeout(() => {
+            closeSignupModal();
+
+            signupBtn.innerHTML = originalBtnText;
+            signupBtn.disabled = false;
+
+            showMessage(
+                "Account created! Please login.",
+                false
+            );
+        }, 2000);
+
+    } else {
+        showModalMessage(
+            data.message,
+            true
+        );
+
+        signupBtn.innerHTML = originalBtnText;
+        signupBtn.disabled = false;
+    }
+
+} catch (error) {
+    console.error(error);
+
+    showModalMessage(
+        "Server error",
+        true
+    );
+
+    signupBtn.innerHTML = originalBtnText;
+    signupBtn.disabled = false;
+}
+        }
+        
+        // Login function
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            
+            if (!email || !password) {
+                showMessage("Please enter both email and password", true);
+                return;
+            }
+            
+            const loginBtn = document.querySelector('.glass-login-card .btn-primary');
+            const originalBtnText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-pulse mr-2"></i> Logging in...';
+            loginBtn.disabled = true;
+            
+            try {
+                const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.token && data.user && data.user.role) {
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("userRole", data.user.role);
+                    if (data.user.name) localStorage.setItem("userName", data.user.name);
+                    
+                    showMessage(`Welcome! Redirecting to ${data.user.role} dashboard...`, false);
+                    
+                    setTimeout(async () => {
+                        if (data.user.role === "student") {
+                            try {
+                                const profRes = await fetch("/api/profile", {
+                                    headers: { "Authorization": `Bearer ${data.token}` }
+                                });
+                                if (profRes.status === 404) {
+                                    window.location.href = "student_profiles.html";
+                                } else {
+                                    window.location.href = "dashboard/studentdashboard.html";
+                                }
+                            } catch(e) {
+                                window.location.href = "student_profiles.html";
+                            }
+                        } else if (data.user.role === "faculty") {
+                            window.location.href = "./dashboard/pages/facultydashboard.html";
+                        } else {
+                            window.location.href = "student_profiles.html";
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(data.message || "Invalid credentials. Please try again.", true);
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = originalBtnText;
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                if (email.includes('student')) {
+                    localStorage.setItem("token", "demo_token");
+                    localStorage.setItem("userRole", "student");
+                    showMessage("Demo Mode: Student Login Successful! Redirecting...", false);
+                    setTimeout(() => window.location.href = "dashboard/studentdashboard.html", 1000);
+                } else if (email.includes('faculty')) {
+                    localStorage.setItem("token", "demo_token");
+                    localStorage.setItem("userRole", "faculty");
+                    showMessage("Demo Mode: Faculty Login Successful! Redirecting...", false);
+                    setTimeout(() => window.location.href = "dashboard/pages/facultydashboard.html", 1000);
+                } else {
+                    showMessage("Demo Mode: Use student@example.com or faculty@example.com", true);
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = originalBtnText;
+                }
+            }
+        }
+        
+        // Enter key support for login
+        document.getElementById('email').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        
+        // Enter key support for modal
+        document.getElementById('signupConfirmPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleSignup();
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('signupModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSignupModal();
+        });
+        
+        // Initialize particles
+        createParticles();
+        
+        // Check for existing session
+        (function checkActiveSession() {
+            const token = localStorage.getItem("token");
+            const role = localStorage.getItem("userRole");
+            if (token && role) {
+                const msgDiv = document.getElementById('msg');
+                msgDiv.innerHTML = `<i class="fas fa-user-check mr-2"></i> Active session as ${role}. You can log in again.`;
+                msgDiv.classList.remove('hidden', 'bg-green-500/30', 'bg-red-500/30');
+                msgDiv.classList.add('bg-blue-500/30', 'text-blue-100', 'backdrop-blur-sm');
+                setTimeout(() => {
+                    msgDiv.classList.add('hidden');
+                }, 4000);
+            }
+        })();
+    </script>
+</body>
+</html>

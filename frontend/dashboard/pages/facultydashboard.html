@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard | CampusEvent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes floatBubble { 0% { transform: translateY(100vh) scale(0.3); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) scale(1); opacity: 0; } }
+        .animated-bg { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientShift 15s ease infinite; }
+        .bubble { position: fixed; background: rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none; animation: floatBubble linear infinite; z-index: 0; }
+        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .stats-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        .stats-card:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.25); }
+        .stats-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transition: left 0.5s; }
+        .stats-card:hover::before { left: 100%; }
+        .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-pending { background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .status-approved { background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .status-rejected { background: #ef4444; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .sidebar-item { transition: all 0.3s ease; }
+        .sidebar-item:hover { background: rgba(255, 255, 255, 0.1); padding-left: 1.75rem; }
+        .sidebar-item.active { background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 3px solid #667eea; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-size: 200% auto; transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -10px rgba(102, 126, 234, 0.5); background-position: right center; }
+        .student-initial { width: 2rem; height: 2rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 700; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; position: fixed; z-index: 100; } .sidebar.open { transform: translateX(0); } .main-content { margin-left: 0 !important; } }
+    </style>
+</head>
+<body class="animated-bg relative overflow-x-hidden">
+    <div class="fixed inset-0 bg-black/30 -z-10"></div>
+    <div id="bubblesContainer" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <div class="min-h-screen flex relative z-10">
+        <!-- SIDEBAR -->
+        <aside class="sidebar w-72 glass-card fixed h-full overflow-y-auto shadow-2xl z-20">
+            <div class="p-6">
+                <div class="mb-8">
+                    <span class="text-xl font-bold text-white">CampusEvent</span>
+                    <p class="text-xs text-white/60">Faculty Portal</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <h3 id="facultyName" class="font-bold text-white text-lg">Faculty</h3>
+                    <p class="text-xs text-white/60">CSE Department</p>
+                </div>
+                <div class="space-y-1">
+                    <button onclick="navigate('dashboard')" class="sidebar-item active w-full text-left px-4 py-3 rounded-xl text-white font-medium" id="nav-dashboard">Dashboard</button>
+                    <button onclick="navigate('manage')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-manage">Manage Events</button>
+                    <button onclick="navigate('create')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-create">Create Event</button>
+                    <button onclick="navigate('registrations')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-registrations">
+                        <span>Registrations</span>
+                        <span id="regBadge" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('teams')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-teams">
+                        <span>Teams</span>
+                        <span id="teamBadge" class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('notifications')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-notifications">
+                        <span>Notifications</span>
+                        <span id="notifBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-settings">Settings</button>
+                </div>
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <button onclick="logout()" class="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 font-medium">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 ml-72 p-8 main-content">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-white">FACULTY OVERVIEW</h1>
+                <p id="welcomeMessage" class="text-white/70">Loading your data...</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stats-card rounded-2xl p-6 cursor-pointer" onclick="navigate('manage')">
+                    <div class="text-right mb-3"><span id="statEvents" class="text-5xl font-bold gradient-text">-</span></div>
+                    <h3 class="text-gray-800 font-bold text-lg">Total Events</h3>
+                    <p class="text-gray-500 text-sm mt-1">Active and upcoming</p>
+                </div>
+                <div class="stats-card rounded-2xl p-6 cursor-pointer" onclick="navigate('registrations')">
+                    <div class="text-right mb-3"><span id="statTotalRegs" class="text-5xl font-bold gradient-text">-</span></div>
+                    <h3 class="text-gray-800 font-bold text-lg">Total Registrations</h3>
+                    <p class="text-gray-500 text-sm mt-1">Across all events</p>
+                </div>
+                <div class="stats-card rounded-2xl p-6 cursor-pointer" onclick="navigate('registrations')">
+                    <div class="text-right mb-3"><span id="statPending" class="text-5xl font-bold text-orange-600">-</span></div>
+                    <h3 class="text-gray-800 font-bold text-lg">Pending</h3>
+                    <p class="text-gray-500 text-sm mt-1">Need your review</p>
+                </div>
+                <div class="stats-card rounded-2xl p-6 cursor-pointer" onclick="navigate('teams')">
+                    <div class="text-right mb-3"><span id="statTeams" class="text-5xl font-bold gradient-text">-</span></div>
+                    <h3 class="text-gray-800 font-bold text-lg">Teams Formed</h3>
+                    <p class="text-gray-500 text-sm mt-1">Currently active</p>
+                </div>
+            </div>
+
+            <!-- Recent Registrations -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">RECENT REGISTRATIONS</h2>
+                        <p class="text-white/60 text-sm mt-1">Latest student registrations</p>
+                    </div>
+                    <button onclick="navigate('registrations')" class="btn-primary px-4 py-2 rounded-lg text-white text-sm font-semibold">View All</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="border-b border-white/10">
+                            <tr>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Student</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Roll No</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Event</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentRegs">
+                            <tr><td colspan="4" class="text-center text-white/50 py-8">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl p-6 hover:bg-white/15 transition cursor-pointer" onclick="navigate('create')">
+                    <h3 class="text-white font-bold text-lg mb-2">Create New Event</h3>
+                    <p class="text-white/60 text-sm">Set up a new hackathon, workshop, or competition</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 hover:bg-white/15 transition cursor-pointer" onclick="navigate('teams')">
+                    <h3 class="text-white font-bold text-lg mb-2">Form Teams</h3>
+                    <p class="text-white/60 text-sm">Create teams based on student skills (AI or manual)</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 hover:bg-white/15 transition cursor-pointer" onclick="navigate('notifications')">
+                    <h3 class="text-white font-bold text-lg mb-2">View Notifications</h3>
+                    <p class="text-white/60 text-sm">Stay updated with event registrations</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API = "/api";
+        function token() { return localStorage.getItem("token"); }
+        function logout() { if (confirm("Logout?")) { localStorage.clear(); window.location.href = "../../login.html"; } }
+        function navigate(page) {
+            const map = { dashboard:"facultydashboard.html", manage:"manage_events.html", create:"../create_events.html", registrations:"registrations.html", teams:"teams.html", notifications:"notifications.html", settings:"settings.html" };
+            if (map[page]) window.location.href = map[page];
+        }
+
+        async function loadDashboard() {
+            const name = localStorage.getItem("userName");
+            if (name) {
+                document.getElementById("facultyName").textContent = name;
+                document.getElementById("welcomeMessage").textContent = `Welcome back, ${name.split(" ")[0]}. Here is your event overview.`;
+            }
+
+            try {
+                // Events
+                const eventsRes = await fetch(`${API}/events/faculty`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const events = await eventsRes.json();
+                document.getElementById("statEvents").textContent = events.length;
+                document.getElementById("regBadge").textContent = events.length;
+
+                // Teams
+                try {
+                    const teamsRes = await fetch(`${API}/teams`, { headers: { "Authorization": `Bearer ${token()}` } });
+                    const teams = await teamsRes.json();
+                    document.getElementById("statTeams").textContent = teams.length;
+                    document.getElementById("teamBadge").textContent = teams.length;
+                } catch(e) {}
+
+                // Notifications
+                try {
+                    const notifRes = await fetch(`${API}/notifications`, { headers: { "Authorization": `Bearer ${token()}` } });
+                    const notifs = await notifRes.json();
+                    document.getElementById("notifBadge").textContent = notifs.filter(n => !n.read).length;
+                } catch(e) {}
+
+                // Registrations for each event
+                let totalRegs = 0;
+                let pendingCount = 0;
+                let allRegs = [];
+
+                for (const event of events) {
+                    try {
+                        const regRes = await fetch(`${API}/registrations/${event.id}`, { headers: { "Authorization": `Bearer ${token()}` } });
+                        const regs = await regRes.json();
+                        totalRegs += regs.length;
+                        pendingCount += regs.filter(r => r.status === "pending").length;
+                        allRegs = allRegs.concat(regs.map(r => ({ ...r, eventTitle: event.title })));
+                    } catch(e) {}
+                }
+
+                document.getElementById("statTotalRegs").textContent = totalRegs;
+                document.getElementById("statPending").textContent = pendingCount;
+
+                // Recent registrations (last 5)
+                const recent = allRegs.slice(0, 5);
+                const tbody = document.getElementById("recentRegs");
+                if (recent.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-white/50 py-8">No registrations yet</td></tr>';
+                } else {
+                    tbody.innerHTML = recent.map(r => `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="py-3 px-4"><div class="flex items-center gap-2"><div class="student-initial">${(r.student?.name || "?").charAt(0).toUpperCase()}</div><span class="text-white text-sm">${r.student?.name || "Unknown"}</span></div></td>
+                            <td class="py-3 px-4 text-white/70 text-sm">${r.student?.profile?.rollno || "-"}</td>
+                            <td class="py-3 px-4 text-white/70 text-sm">${r.eventTitle || "-"}</td>
+                            <td class="py-3 px-4"><span class="status-${r.status}">${r.status}</span></td>
+                        </tr>
+                    `).join("");
+                }
+            } catch(e) {
+                document.getElementById("welcomeMessage").textContent = "Dashboard loaded (offline mode)";
+            }
+        }
+
+        loadDashboard();
+
+        (function createBubbles() {
+            const c = document.getElementById('bubblesContainer');
+            if (!c) return;
+            for (let i = 0; i < 60; i++) {
+                const b = document.createElement('div');
+                b.className = 'bubble';
+                const s = Math.random() * 22 + 3;
+                b.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*14+6}s;animation-delay:${Math.random()*10}s;background:rgba(255,255,255,${Math.random()*0.4+0.1})`;
+                c.appendChild(b);
+            }
+        })();
+    </script>
+</body>
+</html>

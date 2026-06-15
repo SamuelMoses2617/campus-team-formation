@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications | Faculty Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .animated-bg { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientShift 15s ease infinite; }
+        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .sidebar-item { transition: all 0.3s ease; }
+        .sidebar-item:hover { background: rgba(255, 255, 255, 0.1); padding-left: 1.75rem; }
+        .sidebar-item.active { background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 3px solid #667eea; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4); }
+        .bubble { position: fixed; background: rgba(255,255,255,0.25); border-radius: 50%; pointer-events: none; animation: floatBubble linear infinite; z-index: 0; }
+        @keyframes floatBubble { 0% { transform: translateY(100vh) scale(0.3); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) scale(1); opacity: 0; } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); position: fixed; z-index: 100; } .sidebar.open { transform: translateX(0); } .main-content { margin-left: 0 !important; } }
+    </style>
+</head>
+<body class="animated-bg relative overflow-x-hidden">
+    <div class="fixed inset-0 bg-black/30 -z-10"></div>
+    <div id="bubblesContainer" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <div class="min-h-screen flex relative z-10">
+        <aside class="sidebar w-72 glass-card fixed h-full overflow-y-auto shadow-2xl z-20">
+            <div class="p-6">
+                <div class="mb-8">
+                    <span class="text-xl font-bold text-white">CampusEvent</span>
+                    <p class="text-xs text-white/60">Faculty Portal</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <h3 id="facultyName" class="font-bold text-white text-lg">Faculty</h3>
+                    <p class="text-xs text-white/60">CSE Department</p>
+                </div>
+                <div class="space-y-1">
+                    <button onclick="navigate('dashboard')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-dashboard">Dashboard</button>
+                    <button onclick="navigate('manage')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-manage">Manage Events</button>
+                    <button onclick="navigate('create')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-create">Create Event</button>
+                    <button onclick="navigate('registrations')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-registrations">
+                        <span>Registrations</span>
+                        <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full" id="regBadge">0</span>
+                    </button>
+                    <button onclick="navigate('teams')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-teams">
+                        <span>Teams</span>
+                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full" id="teamBadge">0</span>
+                    </button>
+                    <button onclick="navigate('notifications')" class="sidebar-item active w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white font-medium" id="nav-notifications">
+                        <span>Notifications</span>
+                        <span id="notifBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-settings">Settings</button>
+                </div>
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <button onclick="logout()" class="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 font-medium">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 ml-72 p-8 main-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">NOTIFICATIONS</h1>
+                    <p class="text-white/70">Stay updated with event activity</p>
+                </div>
+                <button onclick="markAllRead()" class="btn-primary px-4 py-2 rounded-xl text-white text-sm font-semibold">Mark All Read</button>
+            </div>
+
+            <div id="notificationsList" class="space-y-3">
+                <div class="text-white/50 text-center py-12">Loading notifications...</div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API = "/api";
+        function token() { return localStorage.getItem("token"); }
+        function logout() { if (confirm("Logout?")) { localStorage.clear(); window.location.href = "../../homepage.html"; } }
+        function navigate(page) {
+            const map = { dashboard:"facultydashboard.html", manage:"manage_events.html", create:"../create_events.html", registrations:"registrations.html", teams:"teams.html", notifications:"notifications.html", settings:"settings.html" };
+            if (map[page]) window.location.href = map[page];
+        }
+
+        async function loadNotifications() {
+            const container = document.getElementById("notificationsList");
+            try {
+                const res = await fetch(`${API}/notifications`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const notifs = await res.json();
+                const unread = notifs.filter(n => !n.read).length;
+                document.getElementById("notifBadge").textContent = unread;
+                document.getElementById("regBadge").textContent = notifs.length;
+
+                if (notifs.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-center py-12">No notifications yet</div>';
+                    return;
+                }
+
+                container.innerHTML = notifs.map(n => `
+                    <div class="glass-card p-5 rounded-2xl ${!n.read ? 'border-l-4 border-blue-500' : ''}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-white font-semibold">${n.type === "registration" ? "📢" : n.type === "team" ? "👥" : "📌"}</span>
+                                    <h3 class="text-white font-bold">${n.message}</h3>
+                                    ${!n.read ? '<span class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">New</span>' : ''}
+                                </div>
+                                <p class="text-white/50 text-xs mt-1">${new Date(n.createdAt).toLocaleString()}</p>
+                            </div>
+                            ${!n.read ? `<button onclick="markRead('${n.id}')" class="text-white/40 hover:text-white text-sm ml-4">✓ Read</button>` : ''}
+                        </div>
+                    </div>
+                `).join("");
+            } catch(e) {
+                container.innerHTML = '<div class="text-red-400 text-center py-12">Error loading notifications. Is backend running?</div>';
+            }
+        }
+
+        async function markRead(id) {
+            try {
+                await fetch(`${API}/notifications/${id}/read`, {
+                    method: "PUT",
+                    headers: { "Authorization": `Bearer ${token()}` }
+                });
+                loadNotifications();
+            } catch(e) {}
+        }
+
+        async function markAllRead() {
+            try {
+                await fetch(`${API}/notifications/read-all`, {
+                    method: "PUT",
+                    headers: { "Authorization": `Bearer ${token()}` }
+                });
+                loadNotifications();
+            } catch(e) {}
+        }
+
+        const storedName = localStorage.getItem("userName");
+        if (storedName) document.getElementById("facultyName").textContent = storedName;
+        loadNotifications();
+
+        (function createBubbles() {
+            const c = document.getElementById("bubblesContainer");
+            if (!c) return;
+            for (let i = 0; i < 40; i++) {
+                const b = document.createElement("div");
+                b.className = "bubble";
+                const s = Math.random() * 20 + 3;
+                b.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*14+6}s;animation-delay:${Math.random()*10}s;background:rgba(255,255,255,${Math.random()*0.4+0.1})`;
+                c.appendChild(b);
+            }
+        })();
+    </script>
+</body>
+</html>

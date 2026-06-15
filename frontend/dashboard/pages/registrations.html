@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrations | Faculty Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animated-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4); }
+        .sidebar-item { transition: all 0.3s ease; }
+        .sidebar-item:hover { background: rgba(255, 255, 255, 0.1); padding-left: 1.75rem; }
+        .sidebar-item.active { background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 3px solid #667eea; }
+        .status-pending { background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .status-approved { background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .status-rejected { background: #ef4444; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .bubble {
+            position: fixed; background: rgba(255,255,255,0.25); border-radius: 50%;
+            pointer-events: none; animation: floatBubble linear infinite; z-index: 0;
+        }
+        @keyframes floatBubble {
+            0% { transform: translateY(100vh) scale(0.3); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; position: fixed; z-index: 100; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        .student-avatar { width: 2rem; height: 2rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 700; }
+    </style>
+</head>
+<body class="animated-bg relative overflow-x-hidden">
+    <div class="fixed inset-0 bg-black/30 -z-10"></div>
+    <div id="bubblesContainer" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <div class="min-h-screen flex relative z-10">
+        <!-- SIDEBAR -->
+        <aside class="sidebar w-72 glass-card fixed h-full overflow-y-auto shadow-2xl z-20">
+            <div class="p-6">
+                <div class="mb-8">
+                    <span class="text-xl font-bold text-white">CampusEvent</span>
+                    <p class="text-xs text-white/60">Faculty Portal</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <h3 id="facultyName" class="font-bold text-white text-lg">Faculty</h3>
+                    <p class="text-xs text-white/60">CSE Department</p>
+                </div>
+                <div class="space-y-1">
+                    <button onclick="navigate('dashboard')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-dashboard">Dashboard</button>
+                    <button onclick="navigate('manage')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-manage">Manage Events</button>
+                    <button onclick="navigate('create')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-create">Create Event</button>
+                    <button onclick="navigate('registrations')" class="sidebar-item active w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white font-medium" id="nav-registrations">
+                        <span>Registrations</span>
+                        <span id="regBadge" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('teams')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-teams">
+                        <span>Teams</span>
+                        <span id="teamBadge" class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('notifications')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-notifications">
+                        <span>Notifications</span>
+                        <span id="notifBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                    </button>
+                    <button onclick="navigate('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-settings">Settings</button>
+                </div>
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <button onclick="logout()" class="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 font-medium">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 ml-72 p-8 main-content">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-white">REGISTRATIONS</h1>
+                <p class="text-white/70">Manage student registrations for your events</p>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="glass-card p-6 rounded-2xl mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-white/80 text-sm block mb-1">Event</label>
+                        <select id="eventFilter" onchange="loadRegistrations()" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white"></select>
+                    </div>
+                    <div>
+                        <label class="text-white/80 text-sm block mb-1">Status</label>
+                        <select id="statusFilter" onchange="loadRegistrations()" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white">
+                            <option value="all">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadRegistrations()" class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl px-4 py-2 font-semibold">Apply</button>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="exportCSV()" class="w-full btn-primary px-4 py-2 rounded-xl text-white text-sm font-semibold">Export CSV</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registrations Table -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-white">All Registrations</h2>
+                    <span id="regCount" class="text-white/50 text-sm">0 total</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="border-b border-white/10">
+                            <tr>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Student</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Roll No</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Email</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Event</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Date</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Status</th>
+                                <th class="text-left py-3 px-4 text-white/60 text-sm font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="regTableBody">
+                            <tr><td colspan="7" class="text-center text-white/50 py-8">Select an event to view registrations</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-white/70 text-sm mb-1">Total</h3>
+                    <p id="statTotal" class="text-3xl font-bold text-white">0</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-white/70 text-sm mb-1">Pending</h3>
+                    <p id="statPending" class="text-3xl font-bold text-yellow-400">0</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-white/70 text-sm mb-1">Approved</h3>
+                    <p id="statApproved" class="text-3xl font-bold text-green-400">0</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API = "/api";
+        function token() { return localStorage.getItem("token"); }
+        function logout() { if (confirm("Logout?")) { localStorage.clear(); window.location.href = "../../login.html"; } }
+        function navigate(page) {
+            const map = { dashboard:"facultydashboard.html", manage:"manage_events.html", create:"../create_events.html", registrations:"registrations.html", teams:"teams.html", notifications:"notifications.html", settings:"settings.html" };
+            if (map[page]) window.location.href = map[page];
+        }
+
+        let allRegs = [];
+
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API}/events/faculty`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const events = await res.json();
+                const sel = document.getElementById("eventFilter");
+                sel.innerHTML = '<option value="">Select Event</option>' + events.map(e => `<option value="${e.id}">${e.title}</option>`).join("");
+                document.getElementById("regBadge").textContent = events.length;
+                if (events.length > 0) { sel.value = events[0].id; loadRegistrations(); }
+            } catch(e) {}
+        }
+
+        async function loadRegistrations() {
+            const eventId = document.getElementById("eventFilter").value;
+            const statusFilter = document.getElementById("statusFilter").value;
+            const tbody = document.getElementById("regTableBody");
+            if (!eventId) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-white/50 py-8">Select an event</td></tr>'; return; }
+
+            try {
+                const res = await fetch(`${API}/registrations/${eventId}`, { headers: { "Authorization": `Bearer ${token()}` } });
+                const regs = await res.json();
+                allRegs = regs;
+
+                let filtered = regs;
+                if (statusFilter !== "all") filtered = filtered.filter(r => r.status === statusFilter);
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-white/50 py-8">No registrations found</td></tr>';
+                } else {
+                    tbody.innerHTML = filtered.map(r => `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="student-avatar">${(r.student?.name || "?").charAt(0).toUpperCase()}</div>
+                                    <span class="text-white text-sm">${r.student?.name || "Unknown"}</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-white/70 text-sm">${r.student?.profile?.rollno || "-"}</td>
+                            <td class="py-3 px-4 text-white/70 text-sm">${r.student?.email || "-"}</td>
+                            <td class="py-3 px-4 text-white/70 text-sm">${r.event?.title || "-"}</td>
+                            <td class="py-3 px-4 text-white/70 text-sm">${new Date(r.createdAt).toLocaleDateString()}</td>
+                            <td class="py-3 px-4"><span class="status-${r.status}">${r.status}</span></td>
+                            <td class="py-3 px-4">
+                                ${r.status === "pending" ? `
+                                    <div class="flex gap-2">
+                                        <button onclick="updateStatus('${r.id}','approved')" class="text-green-400 hover:text-green-300 text-sm font-medium">Approve</button>
+                                        <button onclick="updateStatus('${r.id}','rejected')" class="text-red-400 hover:text-red-300 text-sm font-medium">Reject</button>
+                                    </div>
+                                ` : `<span class="text-white/40 text-sm">${r.status === "approved" ? "Approved" : "Rejected"}</span>`}
+                            </td>
+                        </tr>
+                    `).join("");
+                }
+
+                // Stats
+                document.getElementById("statTotal").textContent = regs.length;
+                document.getElementById("statPending").textContent = regs.filter(r => r.status === "pending").length;
+                document.getElementById("statApproved").textContent = regs.filter(r => r.status === "approved").length;
+                document.getElementById("regCount").textContent = `${regs.length} total`;
+
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-400 py-8">Error loading registrations</td></tr>';
+            }
+        }
+
+        async function updateStatus(id, status) {
+            try {
+                const res = await fetch(`${API}/registrations/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token()}` },
+                    body: JSON.stringify({ status })
+                });
+                if (res.ok) {
+                    loadRegistrations();
+                } else {
+                    const data = await res.json();
+                    alert(data.message);
+                }
+            } catch(e) { alert("Server error"); }
+        }
+
+        function exportCSV() {
+            if (allRegs.length === 0) { alert("No data to export"); return; }
+            let csv = "Name,Roll No,Email,Event,Date,Status\n";
+            allRegs.forEach(r => {
+                csv += `"${r.student?.name}","${r.student?.profile?.rollno}","${r.student?.email}","${r.event?.title}","${new Date(r.createdAt).toLocaleDateString()}","${r.status}"\n`;
+            });
+            const blob = new Blob([csv], { type: "text/csv" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "registrations.csv";
+            a.click();
+        }
+
+        // Init
+        const storedName = localStorage.getItem("userName");
+        if (storedName) document.getElementById("facultyName").textContent = storedName;
+        loadEvents();
+
+        (function createBubbles() {
+            const c = document.getElementById("bubblesContainer");
+            if (!c) return;
+            for (let i = 0; i < 40; i++) {
+                const b = document.createElement("div");
+                b.className = "bubble";
+                const s = Math.random() * 20 + 3;
+                b.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*14+6}s;animation-delay:${Math.random()*10}s;background:rgba(255,255,255,${Math.random()*0.4+0.1})`;
+                c.appendChild(b);
+            }
+        })();
+    </script>
+</body>
+</html>
