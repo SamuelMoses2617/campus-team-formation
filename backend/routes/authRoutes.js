@@ -4,11 +4,13 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 
-const { register, login } = require("../controllers/authController");
+const { register, login, forgotPassword, resetPassword } = require("../controllers/authController");
 const passport = require("../config/passport");
 
 router.post("/register", register);
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 if (process.env.GOOGLE_CLIENT_ID) {
   router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false }));

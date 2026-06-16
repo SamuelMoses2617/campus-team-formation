@@ -284,7 +284,7 @@
             
             <!-- Forgot Password Link -->
             <div class="text-right mb-6">
-                <a href="#" class="text-sm glass-link font-medium">Forgot password?</a>
+                <a onclick="openForgotModal()" class="text-sm glass-link font-medium cursor-pointer">Forgot password?</a>
             </div>
             
             <!-- Login Button -->
@@ -308,10 +308,7 @@
             <!-- Message Area -->
             <div id="msg" class="mt-4 p-3 rounded-lg text-center text-sm hidden backdrop-blur-sm"></div>
             
-            <!-- Demo Hint -->
-            <div class="mt-4 text-center text-xs text-white/50">
-                <i class="fas fa-info-circle"></i> Demo: student@example.com / any password
-            </div>
+
         </div>
     </div>
     
@@ -375,6 +372,58 @@
         </div>
     </div>
     
+    <!-- Forgot Password Modal -->
+    <div id="forgotModal" class="modal-overlay">
+        <div class="modal-content p-8 md:p-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Forgot Password</h2>
+                <button onclick="closeForgotModal()" class="close-modal text-white/80 hover:text-white text-2xl w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
+            </div>
+            <p class="text-white/70 text-sm mb-6">Enter your email and we'll send a 6-digit OTP to reset your password.</p>
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">Email Address</label>
+                <input type="email" id="forgotEmail" placeholder="you@example.com" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            <button onclick="sendOtp()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-lg shadow-lg shimmer">
+                <i class="fas fa-paper-plane mr-2"></i> Send OTP
+            </button>
+            <div id="forgotMsg" class="mt-4 p-3 rounded-lg text-center text-sm hidden backdrop-blur-sm"></div>
+            <p class="text-center text-xs text-white/50 mt-4">
+                <a onclick="closeForgotModal()" class="text-white/70 hover:text-white cursor-pointer">Back to Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetModal" class="modal-overlay">
+        <div class="modal-content p-8 md:p-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Reset Password</h2>
+                <button onclick="closeResetModal()" class="close-modal text-white/80 hover:text-white text-2xl w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
+            </div>
+            <p class="text-white/70 text-sm mb-6">Enter the OTP sent to your email and your new password.</p>
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">OTP Code</label>
+                <input type="text" id="resetOtp" placeholder="6-digit OTP" maxlength="6" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none text-center text-2xl tracking-widest">
+            </div>
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">New Password</label>
+                <input type="password" id="resetPassword" placeholder="At least 6 characters" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            <div class="mb-4">
+                <label class="block glass-label text-sm font-semibold mb-2">Confirm Password</label>
+                <input type="password" id="resetConfirmPassword" placeholder="Confirm your password" class="modal-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            <button onclick="resetPassword()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-lg shadow-lg shimmer">
+                <i class="fas fa-key mr-2"></i> Reset Password
+            </button>
+            <div id="resetMsg" class="mt-4 p-3 rounded-lg text-center text-sm hidden backdrop-blur-sm"></div>
+            <p class="text-center text-xs text-white/50 mt-4">
+                <a onclick="closeForgotModal(); closeResetModal()" class="text-white/70 hover:text-white cursor-pointer">Back to Login</a>
+            </p>
+        </div>
+    </div>
+
     <script>
         // Create floating particles
         function createParticles() {
@@ -395,6 +444,105 @@
             }
         }
         
+        // Forgot Password - Open Modal
+        function openForgotModal() {
+            document.getElementById('forgotModal').classList.add('active');
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('forgotMsg').classList.add('hidden');
+        }
+        function closeForgotModal() {
+            document.getElementById('forgotModal').classList.remove('active');
+            document.getElementById('resetModal').classList.remove('active');
+        }
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.remove('active');
+        }
+
+        // Send OTP
+        async function sendOtp() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const msgDiv = document.getElementById('forgotMsg');
+            if (!email) {
+                msgDiv.innerHTML = 'Please enter your email';
+                msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                return;
+            }
+            msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-blue-500/30 text-blue-100 backdrop-blur-sm';
+            msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse mr-2"></i> Sending OTP...';
+            try {
+                const res = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-green-500/30 text-green-100 backdrop-blur-sm';
+                    msgDiv.innerHTML = '<i class="fas fa-check-circle mr-2"></i> OTP sent! Check your email.';
+                    setTimeout(() => {
+                        closeForgotModal();
+                        document.getElementById('resetModal').classList.add('active');
+                    }, 1500);
+                } else {
+                    msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                    msgDiv.innerHTML = data.message || 'Error sending OTP';
+                }
+            } catch(e) {
+                msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                msgDiv.innerHTML = 'Server error. Is backend running?';
+            }
+        }
+
+        // Reset Password
+        async function resetPassword() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const otp = document.getElementById('resetOtp').value.trim();
+            const newPassword = document.getElementById('resetPassword').value;
+            const confirmPassword = document.getElementById('resetConfirmPassword').value;
+            const msgDiv = document.getElementById('resetMsg');
+
+            if (!otp || !newPassword) {
+                msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                msgDiv.innerHTML = 'Please fill all fields';
+                return;
+            }
+            if (newPassword.length < 6) {
+                msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                msgDiv.innerHTML = 'Password must be at least 6 characters';
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                msgDiv.innerHTML = 'Passwords do not match';
+                return;
+            }
+
+            msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-blue-500/30 text-blue-100 backdrop-blur-sm';
+            msgDiv.innerHTML = '<i class="fas fa-spinner fa-pulse mr-2"></i> Resetting password...';
+            try {
+                const res = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-green-500/30 text-green-100 backdrop-blur-sm';
+                    msgDiv.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Password reset! You can now login.';
+                    setTimeout(() => {
+                        closeResetModal();
+                        document.getElementById('password').value = '';
+                    }, 1500);
+                } else {
+                    msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                    msgDiv.innerHTML = data.message || 'Error resetting password';
+                }
+            } catch(e) {
+                msgDiv.className = 'mt-4 p-3 rounded-lg text-center text-sm bg-red-500/30 text-red-100 backdrop-blur-sm';
+                msgDiv.innerHTML = 'Server error';
+            }
+        }
+
         // Show message in login form
         function showMessage(message, isError = false) {
             const msgDiv = document.getElementById('msg');
@@ -617,21 +765,9 @@
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                if (email.includes('student')) {
-                    localStorage.setItem("token", "demo_token");
-                    localStorage.setItem("userRole", "student");
-                    showMessage("Demo Mode: Student Login Successful! Redirecting...", false);
-                    setTimeout(() => window.location.href = "dashboard/studentdashboard.html", 1000);
-                } else if (email.includes('faculty')) {
-                    localStorage.setItem("token", "demo_token");
-                    localStorage.setItem("userRole", "faculty");
-                    showMessage("Demo Mode: Faculty Login Successful! Redirecting...", false);
-                    setTimeout(() => window.location.href = "dashboard/pages/facultydashboard.html", 1000);
-                } else {
-                    showMessage("Demo Mode: Use student@example.com or faculty@example.com", true);
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = originalBtnText;
-                }
+                showMessage("Server error. Check backend connection.", true);
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalBtnText;
             }
         }
         
