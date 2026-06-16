@@ -281,16 +281,12 @@
                 <!-- Faculty Info Card -->
                 <div class="glass-card rounded-xl p-4 mb-6">
                     <div class="mb-3">
-                        <h3 class="font-bold text-white text-lg">Dr. James Wilson</h3>
-                        <p class="text-xs text-white/60">CSE Department</p>
+                        <h3 id="facSidebarName" class="font-bold text-white text-lg">Faculty</h3>
+                        <p id="facSidebarDept" class="text-xs text-white/60">Department</p>
                     </div>
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-white/50">Faculty ID:</span>
-                        <span class="font-semibold text-white">FAC2024001</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm mt-1">
-                        <span class="text-white/50">Member since:</span>
-                        <span class="font-semibold text-white">2024</span>
+                        <span id="facSidebarId" class="font-semibold text-white">--</span>
                     </div>
                 </div>
                 
@@ -307,15 +303,15 @@
                     </button>
                     <button onclick="setActivePage('registrations')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-registrations">
                         <span>Registrations</span>
-                        <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">12</span>
+                        <span id="badgeRegistrations" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">0</span>
                     </button>
                     <button onclick="setActivePage('teams')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-teams">
                         <span>Teams</span>
-                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">8</span>
+                        <span id="badgeTeams" class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">0</span>
                     </button>
                     <button onclick="setActivePage('notifications')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-notifications">
                         <span>Notifications</span>
-                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full pulse-element">5</span>
+                        <span id="badgeNotifications" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full pulse-element">0</span>
                     </button>
                     <button onclick="setActivePage('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-settings">
                         Settings
@@ -340,16 +336,19 @@
 </h1>
 
 <div class="glass-card p-6 rounded-2xl max-w-2xl">
-    <input type="text"
+                    <input id="evTitle" type="text"
            placeholder="Event Name"
            class="w-full p-3 rounded mb-4 text-black">
 
-    <textarea
+    <textarea id="evDesc"
     placeholder="Description"
     rows="5"
     class="w-full p-3 rounded mb-4 text-black"></textarea>
 
-    <input type="date"
+    <input id="evDate" type="date"
+           class="w-full p-3 rounded mb-4 text-black">
+    
+    <input id="evLocation" type="text" placeholder="Location (optional)"
            class="w-full p-3 rounded mb-4 text-black">
 
  <button onclick="submitEvent()"
@@ -407,6 +406,15 @@
         // Initialize bubbles
         createBubbles();
         
+        // Load faculty info from localStorage
+        (function initFacultySidebar() {
+            const name = localStorage.getItem("userName") || "Faculty";
+            const email = localStorage.getItem("userEmail") || "";
+            document.getElementById("facSidebarName").textContent = name;
+            document.getElementById("facSidebarDept").textContent = email;
+            document.getElementById("facSidebarId").textContent = localStorage.getItem("userId")?.slice(0,8) || "--";
+        })();
+        
         // Scroll reveal animation
         const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
         const observer = new IntersectionObserver((entries) => {
@@ -462,11 +470,10 @@ const API = "/api";
 function token() { return localStorage.getItem("token"); }
 
 async function submitEvent() {
-    const inputs = document.querySelectorAll('input, textarea, select');
-    const title = inputs[0]?.value;
-    const description = inputs[1]?.value;
-    const date = inputs[2]?.value;
-    const location = inputs[3]?.value || "TBD";
+    const title = document.getElementById("evTitle")?.value;
+    const description = document.getElementById("evDesc")?.value;
+    const date = document.getElementById("evDate")?.value;
+    const location = document.getElementById("evLocation")?.value || "TBD";
 
     if (!title || !description || !date) {
         alert("Please fill title, description, and date!");
@@ -497,9 +504,6 @@ async function submitEvent() {
 
 
 </script>
-
-
-
-
+<script src="pages/nav.js"></script>
 </body>
 </html>

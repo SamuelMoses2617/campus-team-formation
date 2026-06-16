@@ -294,7 +294,7 @@
             
             <!-- Social Login Section -->
             <div class="mt-6">
-                <button class="glass-social-btn w-full py-3 rounded-xl flex items-center justify-center gap-3 transition">
+                <button onclick="window.location.href='/api/auth/google'" class="glass-social-btn w-full py-3 rounded-xl flex items-center justify-center gap-3 transition cursor-pointer">
                     <i class="fab fa-google text-white"></i>
                     <span class="font-medium text-white">Sign in with Google</span>
                 </button>
@@ -584,7 +584,9 @@
                 if (data.token && data.user && data.user.role) {
                     localStorage.setItem("token", data.token);
                     localStorage.setItem("userRole", data.user.role);
+                    localStorage.setItem("userId", data.user.id);
                     if (data.user.name) localStorage.setItem("userName", data.user.name);
+                    if (data.user.email) localStorage.setItem("userEmail", data.user.email);
                     
                     showMessage(`Welcome! Redirecting to ${data.user.role} dashboard...`, false);
                     
@@ -666,6 +668,51 @@
                 setTimeout(() => {
                     msgDiv.classList.add('hidden');
                 }, 4000);
+            }
+        })();
+
+        // Handle Google OAuth callback params
+        (function handleGoogleCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const role = params.get('role');
+            const name = params.get('name');
+
+            if (token && role) {
+                localStorage.setItem("token", token);
+                localStorage.setItem("userRole", role);
+                if (name) localStorage.setItem("userName", decodeURIComponent(name));
+                const email = params.get('email');
+                const uid = params.get('id');
+                if (email) localStorage.setItem("userEmail", email);
+
+                showMessage(`Welcome ${name ? decodeURIComponent(name) : ''}! Redirecting...`, false);
+
+                setTimeout(async () => {
+                    if (role === "student") {
+                        try {
+                            const profRes = await fetch("/api/profile", {
+                                headers: { "Authorization": `Bearer ${token}` }
+                            });
+                            if (profRes.status === 404) {
+                                window.location.href = "student_profiles.html";
+                            } else {
+                                window.location.href = "dashboard/studentdashboard.html";
+                            }
+                        } catch(e) {
+                            window.location.href = "student_profiles.html";
+                        }
+                    } else if (role === "faculty") {
+                        window.location.href = "./dashboard/pages/facultydashboard.html";
+                    } else {
+                        window.location.href = "student_profiles.html";
+                    }
+                }, 1000);
+
+                // Clean URL
+                window.history.replaceState({}, document.title, "/login.html");
+            } else if (params.get('error')) {
+                showMessage("Google sign-in failed. Please try again.", true);
             }
         })();
     </script>

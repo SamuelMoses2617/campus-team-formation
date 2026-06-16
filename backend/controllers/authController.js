@@ -59,6 +59,12 @@ const login = async (req, res) => {
       });
     }
 
+    if (!user.password) {
+      return res.status(400).json({
+        message: "This account uses Google sign-in. Please click 'Sign in with Google'.",
+      });
+    }
+
     const isMatch = await bcrypt.compare(
       password,
       user.password

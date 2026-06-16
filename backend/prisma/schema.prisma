@@ -8,11 +8,13 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
+  id       String  @id @default(uuid())
   name     String
-  email    String @unique
-  password String
-  role     String @default("student")
+  email    String  @unique
+  password String?
+  role     String  @default("student")
+  googleId String? @unique
+  avatar   String?
 
   profile      StudentProfile?
   registrations Registration[]

@@ -183,13 +183,19 @@
                 const res = await fetch(`${API}/profile`, { headers: { "Authorization": `Bearer ${token}` } });
                 if (res.status === 404) return;
                 const data = await res.json();
-                if (data && data.rollno) {
-                    document.getElementById("rollno").value = data.rollno || "";
-                    document.getElementById("branch").value = data.branch || "";
-                    document.getElementById("year").value = data.year || "";
-                    document.getElementById("skills").value = data.skills || "";
-                    document.getElementById("linkedin").value = data.linkedin || "";
-                    document.getElementById("github").value = data.github || "";
+                if (data) {
+                    if (data.user?.name) {
+                        document.getElementById("name").value = data.user.name;
+                        localStorage.setItem("userName", data.user.name);
+                    }
+                    if (data.user?.email) localStorage.setItem("userEmail", data.user.email);
+                    if (data.user?.id) localStorage.setItem("userId", data.user.id);
+                    if (data.rollno) document.getElementById("rollno").value = data.rollno;
+                    if (data.branch) document.getElementById("branch").value = data.branch;
+                    if (data.year) document.getElementById("year").value = data.year;
+                    if (data.skills) document.getElementById("skills").value = data.skills;
+                    if (data.linkedin) document.getElementById("linkedin").value = data.linkedin;
+                    if (data.github) document.getElementById("github").value = data.github;
                     updatePreview();
                 }
             } catch (e) { console.log(e); }

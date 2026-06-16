@@ -25,6 +25,10 @@ const createEvent = async (req, res) => {
 const getEvents = async (req, res) => {
   try {
     const events = await prisma.event.findMany({
+      include: {
+        faculty: { select: { id: true, name: true, email: true } },
+        _count: { select: { registrations: true } }
+      },
       orderBy: { createdAt: "desc" }
     });
     res.json(events);
@@ -38,6 +42,9 @@ const getFacultyEvents = async (req, res) => {
     const facultyId = req.user.id;
     const events = await prisma.event.findMany({
       where: { facultyId },
+      include: {
+        _count: { select: { registrations: true } }
+      },
       orderBy: { createdAt: "desc" }
     });
     res.json(events);

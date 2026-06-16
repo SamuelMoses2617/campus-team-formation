@@ -105,187 +105,77 @@
     </div>
     
     <script>
-        // Mock Notifications Data
-        let notifications = [
-            {
-                id: 1,
-                title: 'Team Selected! 🎉',
-                message: 'Congratulations! You have been selected for Team "Code Warriors" in AI Hackathon 2025.',
-                type: 'team_selected',
-                isRead: false,
-                time: '2 hours ago',
-                icon: '👥',
-                color: 'from-green-500 to-emerald-500'
-            },
-            {
-                id: 2,
-                title: 'Registration Confirmed',
-                message: 'Your registration for Web Development Workshop has been approved.',
-                type: 'event_update',
-                isRead: false,
-                time: '1 day ago',
-                icon: '✅',
-                color: 'from-blue-500 to-cyan-500'
-            },
-            {
-                id: 3,
-                title: 'Important Announcement',
-                message: 'Orientation session for AI Hackathon on Jan 14th at 10 AM in Main Auditorium.',
-                type: 'announcement',
-                isRead: true,
-                time: '2 days ago',
-                icon: '📢',
-                color: 'from-purple-500 to-pink-500'
-            },
-            {
-                id: 4,
-                title: 'Team Meeting Scheduled',
-                message: 'Team "Code Warriors" meeting scheduled for tomorrow at 3 PM.',
-                type: 'team_selected',
-                isRead: true,
-                time: '3 days ago',
-                icon: '📅',
-                color: 'from-orange-500 to-red-500'
-            },
-            {
-                id: 5,
-                title: 'Event Deadline Extended',
-                message: 'The registration deadline for Tech Ideathon has been extended to Feb 8th.',
-                type: 'event_update',
-                isRead: false,
-                time: '4 days ago',
-                icon: '⏰',
-                color: 'from-yellow-500 to-orange-500'
-            },
-            {
-                id: 6,
-                title: 'New Resource Available',
-                message: 'Study materials for Web Development Workshop are now available.',
-                type: 'announcement',
-                isRead: true,
-                time: '5 days ago',
-                icon: '📚',
-                color: 'from-teal-500 to-cyan-500'
-            }
-        ];
-        
-        let currentFilter = 'all';
-        
-        // Render notifications
-        function renderNotifications() {
+        const API = "/api";
+        function token() { return localStorage.getItem("token"); }
+
+        async function loadNotifications() {
+            try {
+                const res = await fetch(`${API}/notifications`, { headers: { Authorization: `Bearer ${token()}` } });
+                if (!res.ok) { renderEmpty(); return; }
+                const data = await res.json();
+                renderNotifications(data || []);
+            } catch(e) { renderEmpty(); }
+        }
+
+        function renderNotifications(notifications) {
             const container = document.getElementById('notificationsList');
-            let filtered = notifications;
-            
-            if (currentFilter !== 'all') {
-                filtered = notifications.filter(n => n.type === currentFilter);
-            }
-            
-            if (filtered.length === 0) {
+            if (notifications.length === 0) {
                 container.innerHTML = `
                     <div class="glass-card p-8 text-center">
-                        <div class="text-6xl mb-4">🔔</div>
                         <h3 class="text-white text-xl font-semibold mb-2">No Notifications</h3>
                         <p class="text-white/50">You're all caught up!</p>
                     </div>
                 `;
                 return;
             }
-            
-            container.innerHTML = filtered.map(notif => `
-                <div class="glass-card notification-item ${!notif.isRead ? 'notification-unread' : ''} p-4" onclick="markAsRead(${notif.id})">
+            container.innerHTML = notifications.map(n => `
+                <div class="glass-card notification-item ${!n.read ? 'notification-unread' : ''} p-4">
                     <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-gradient-to-r ${notif.color} rounded-xl flex items-center justify-center flex-shrink-0">
-                            <span class="text-xl">${notif.icon}</span>
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-bold text-lg">${n.type === 'team' ? 'T' : n.type === 'registration' ? 'R' : 'N'}</span>
                         </div>
                         <div class="flex-1">
                             <div class="flex items-center justify-between mb-1">
-                                <h3 class="text-white font-semibold">${notif.title}</h3>
-                                ${!notif.isRead ? '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">New</span>' : ''}
+                                <h3 class="text-white font-semibold">${n.type.toUpperCase()}</h3>
+                                ${!n.read ? '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">New</span>' : ''}
                             </div>
-                            <p class="text-white/70 text-sm mb-2">${notif.message}</p>
+                            <p class="text-white/70 text-sm mb-2">${n.message}</p>
                             <div class="flex items-center gap-4">
-                                <span class="text-white/40 text-xs">${notif.time}</span>
-                                <button onclick="event.stopPropagation(); deleteNotification(${notif.id})" class="text-red-400 hover:text-red-300 text-xs">Delete</button>
+                                <span class="text-white/40 text-xs">${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ''}</span>
+                                ${!n.read ? `<button onclick="markRead('${n.id}')" class="text-blue-400 hover:text-blue-300 text-xs">Mark read</button>` : ''}
                             </div>
                         </div>
                     </div>
                 </div>
             `).join('');
-            
-            updateUnreadCount();
+            updateUnreadCount(notifications);
         }
-        
-        // Mark single notification as read
-        function markAsRead(id) {
-            const notif = notifications.find(n => n.id === id);
-            if (notif && !notif.isRead) {
-                notif.isRead = true;
-                renderNotifications();
-            }
+
+        async function markRead(id) {
+            try { await fetch(`${API}/notifications/${id}`, { method: "PUT", headers: { Authorization: `Bearer ${token()}` } }); } catch(e) {}
+            await loadNotifications();
         }
-        
-        // Mark all as read
-        function markAllAsRead() {
-            notifications.forEach(n => n.isRead = true);
-            renderNotifications();
-            alert('✅ All notifications marked as read');
+
+        async function markAllAsRead() {
+            try { await fetch(`${API}/notifications/read-all`, { method: "PUT", headers: { Authorization: `Bearer ${token()}` } }); } catch(e) {}
+            await loadNotifications();
         }
-        
-        // Delete notification
-        function deleteNotification(id) {
-            notifications = notifications.filter(n => n.id !== id);
-            renderNotifications();
-            alert('🗑️ Notification deleted');
+
+        function updateUnreadCount(notifications) {
+            const unread = notifications.filter(n => !n.read).length;
+            document.title = unread > 0 ? `(${unread}) Notifications | CampusEvent` : 'Notifications | CampusEvent';
         }
-        
-        // Filter notifications
-        function filterNotifications(type) {
-            currentFilter = type;
-            
-            // Update active filter button styling
-            document.querySelectorAll('[id^="filter"]').forEach(btn => {
-                btn.classList.remove('bg-white/20');
-                btn.classList.add('text-white/70');
-            });
-            
-            const activeBtn = document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            if (activeBtn) {
-                activeBtn.classList.add('bg-white/20');
-                activeBtn.classList.remove('text-white/70');
-                activeBtn.classList.add('text-white');
-            }
-            
-            renderNotifications();
+
+        function renderEmpty() {
+            document.getElementById('notificationsList').innerHTML = `
+                <div class="glass-card p-8 text-center">
+                    <h3 class="text-white text-xl font-semibold mb-2">No Notifications</h3>
+                    <p class="text-white/50">You're all caught up!</p>
+                </div>
+            `;
         }
-        
-        // Update unread count in title
-        function updateUnreadCount() {
-            const unreadCount = notifications.filter(n => !n.isRead).length;
-            document.title = unreadCount > 0 ? `(${unreadCount}) Notifications | CampusEvent` : 'Notifications | CampusEvent';
-        }
-        
-        // Initial render
-        renderNotifications();
-        
-        // Refresh every 30 seconds (simulate real-time)
-        setInterval(() => {
-            // Simulate new notification (for demo)
-            const hasNew = Math.random() > 0.7;
-            if (hasNew) {
-                const newNotif = {
-                    id: Date.now(),
-                    title: 'New Update!',
-                    message: 'You have a new message from your team.',
-                    type: 'announcement',
-                    isRead: false,
-                    time: 'Just now',
-                    icon: '💬',
-                    color: 'from-pink-500 to-rose-500'
-                };
-                notifications.unshift(newNotif);
-                renderNotifications();
-            }
-        }, 30000);
+
+        loadNotifications();
     </script>
 </body>
 </html>

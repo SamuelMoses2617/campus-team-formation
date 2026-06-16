@@ -202,16 +202,16 @@
                 <div class="glass-card rounded-xl p-4 mb-6">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
-                            SM
+                            <span id="userInitials">?</span>
                         </div>
                         <div>
-                            <h3 class="font-bold text-white">Samuel Moses</h3>
-                            <p class="text-xs text-white/60">CS2024001 • CSE</p>
+                            <h3 id="sidebarName" class="font-bold text-white">Loading...</h3>
+                            <p id="sidebarDetail" class="text-xs text-white/60">Loading...</p>
                         </div>
                     </div>
                     <div class="flex items-center justify-between text-xs">
-                        <span class="text-white/60">Member since:</span>
-                        <span class="font-semibold text-white">2024</span>
+                        <span class="text-white/60">Role:</span>
+                        <span id="memberSince" class="font-semibold text-white">Student</span>
                     </div>
                 </div>
                 
@@ -274,7 +274,7 @@
     <div id="chatModal" class="modal">
         <div class="glass-card p-0 w-full max-w-4xl mx-4 h-[80vh] flex flex-col">
             <div class="p-4 border-b border-white/10 flex items-center justify-between">
-                <h3 class="text-white font-semibold">Team Chat - Code Warriors</h3>
+                <h3 class="text-white font-semibold">Team Chat</h3>
                 <button onclick="closeChatModal()" class="text-white/60 hover:text-white">✕</button>
             </div>
             <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
@@ -288,59 +288,48 @@
     </div>
     
     <script>
-        // Mock Data
-        const user = {
-            name: 'Samuel Moses',
-            rollNumber: 'CS2024001',
-            branch: 'Computer Science',
-            year: '3rd',
-            email: 'samuel@example.com',
-            phone: '+91 98765 43210',
-            skills: ['Python', 'React', 'JavaScript', 'Node.js', 'MongoDB'],
-            bio: 'Passionate full-stack developer with interest in AI and ML. Looking for hackathon teammates!',
-            github: 'github.com/samuelmoses',
-            linkedin: 'linkedin.com/in/samuelmoses'
-        };
-        
-        const events = [
-            { id: 1, name: 'AI Hackathon 2025', date: 'Jan 15-17, 2025', venue: 'Main Auditorium', status: 'registered', icon: '🏆', color: 'from-blue-500 to-indigo-600' },
-            { id: 2, name: 'Web Development Workshop', date: 'Feb 1, 2025', venue: 'Computer Lab 301', status: 'registered', icon: '💻', color: 'from-green-500 to-teal-600' },
-            { id: 3, name: 'Tech Ideathon', date: 'Feb 10-11, 2025', venue: 'Seminar Hall', status: 'pending', icon: '💡', color: 'from-purple-500 to-pink-600' }
-        ];
-        
-        const team = {
-            name: 'Code Warriors',
-            event: 'AI Hackathon 2025',
-            members: [
-                { name: 'Samuel Moses', role: 'Frontend Developer', rollNumber: 'CS2024001', avatar: 'SM', isOnline: true },
-                { name: 'John David', role: 'Backend Developer', rollNumber: 'CS2024002', avatar: 'JD', isOnline: true },
-                { name: 'Priya Sharma', role: 'ML Engineer', rollNumber: 'CS2024003', avatar: 'PS', isOnline: true },
-                { name: 'Raj Kumar', role: 'UI/UX Designer', rollNumber: 'CS2024004', avatar: 'RK', isOnline: false }
-            ],
-            mentor: 'Dr. Sarah Johnson'
-        };
-        
-        const notifications = [
-            { id: 1, title: 'Team Selected! 🎉', message: 'You have been selected for Team "Code Warriors" in AI Hackathon 2025.', time: '2 hours ago', read: false, type: 'team' },
-            { id: 2, title: 'Registration Confirmed', message: 'Your registration for Web Development Workshop has been approved.', time: '1 day ago', read: false, type: 'event' },
-            { id: 3, title: 'Important Announcement', message: 'Orientation session for AI Hackathon on Jan 14th at 10 AM.', time: '2 days ago', read: true, type: 'announcement' }
-        ];
-        
-        let chatMessages = [
-            { id: 1, sender: 'Samuel Moses', text: 'Hello team! Ready for the meeting?', time: '10:42 AM', type: 'sent' },
-            { id: 2, sender: 'John David', text: 'Ready! Let\'s finalize the project structure.', time: '10:43 AM', type: 'received' },
-            { id: 3, sender: 'You', text: 'Great! I\'ve prepared the frontend structure.', time: '10:45 AM', type: 'sent' },
-            { id: 4, sender: 'Priya Sharma', text: 'Awesome! I\'ll work on the backend API integration.', time: '10:47 AM', type: 'received' }
-        ];
-        
+        const API = "/api";
+        let userData = {};
+        let userEvents = [];
+        let userTeams = [];
+        let userNotifs = [];
+        let chatMessages = [];
+
+        function token() { return localStorage.getItem("token"); }
+        function logout() { localStorage.clear(); window.location.href = "../homepage.html"; }
+
+        // Sidebar user info uses localStorage (fast) + profile API (enrich)
+        function updateSidebar() {
+            const name = localStorage.getItem("userName") || "Student";
+            document.getElementById("sidebarName").textContent = name;
+            const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+            document.getElementById("userInitials").textContent = initials;
+        }
+
+        async function loadUserProfile() {
+            try {
+                const res = await fetch(`${API}/profile`, { headers: { Authorization: `Bearer ${token()}` } });
+                if (res.status === 404) return;
+                const data = await res.json();
+                if (data) {
+                    const name = localStorage.getItem("userName") || "Student";
+                    document.getElementById("sidebarDetail").textContent = `${data.rollno || ""} ${data.branch ? "• " + data.branch : ""}`;
+                    // store for stats
+                    userData = data;
+                }
+            } catch(e) {}
+        }
+
         // Dashboard View
         function showDashboard() {
             setActiveNav('dashboard');
+            const name = localStorage.getItem("userName") || "Student";
+            const firstName = name.split(" ")[0];
             const container = document.getElementById('mainContent');
             container.innerHTML = `
                 <div class="animate-fade-in">
                     <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-white">Welcome back, ${user.name.split(' ')[0]}! 👋</h1>
+                        <h1 class="text-3xl font-bold text-white">Welcome back, ${firstName}!</h1>
                         <p class="text-white/80 text-lg mt-2">Here's what's happening with your events today</p>
                     </div>
                     
@@ -351,10 +340,10 @@
                                 <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 </div>
-                                <span class="text-3xl font-bold text-gray-800">3</span>
+                                <span class="text-3xl font-bold text-gray-800" id="statEvents">0</span>
                             </div>
                             <h3 class="text-gray-700 font-semibold">Upcoming Events</h3>
-                            <p class="text-gray-500 text-sm mt-1">Next: AI Hackathon</p>
+                            <p class="text-gray-500 text-sm mt-1" id="statEventsNext">--</p>
                         </div>
                         
                         <div class="stat-card rounded-2xl p-6">
@@ -362,10 +351,10 @@
                                 <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </div>
-                                <span class="text-3xl font-bold text-gray-800">2</span>
+                                <span class="text-3xl font-bold text-gray-800" id="statRegistered">0</span>
                             </div>
                             <h3 class="text-gray-700 font-semibold">Registered Events</h3>
-                            <p class="text-gray-500 text-sm mt-1">AI Hackathon, Workshop</p>
+                            <p class="text-gray-500 text-sm mt-1" id="statRegisteredList">--</p>
                         </div>
                         
                         <div class="stat-card rounded-2xl p-6">
@@ -373,10 +362,10 @@
                                 <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 </div>
-                                <span class="text-3xl font-bold text-gray-800">1</span>
+                                <span class="text-3xl font-bold text-gray-800" id="statTeams">0</span>
                             </div>
-                            <h3 class="text-gray-700 font-semibold">Team Invites</h3>
-                            <p class="text-gray-500 text-sm mt-1">From AI Hackathon</p>
+                            <h3 class="text-gray-700 font-semibold">My Teams</h3>
+                            <p class="text-gray-500 text-sm mt-1" id="statTeamsInfo">--</p>
                         </div>
                         
                         <div class="stat-card rounded-2xl p-6">
@@ -384,10 +373,10 @@
                                 <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                                 </div>
-                                <span class="text-3xl font-bold text-gray-800">3</span>
+                                <span class="text-3xl font-bold text-gray-800" id="statNotifs">0</span>
                             </div>
                             <h3 class="text-gray-700 font-semibold">Notifications</h3>
-                            <p class="text-gray-500 text-sm mt-1">Unread messages</p>
+                            <p class="text-gray-500 text-sm mt-1" id="statNotifsInfo">--</p>
                         </div>
                     </div>
                     
@@ -395,173 +384,243 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="glass-card rounded-2xl p-6">
                             <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-xl font-bold text-white">📌 Your Events</h2>
-                                <button onclick="showMyTeam()" class="text-white/60 hover:text-white text-sm">View All →</button>
+                                <h2 class="text-xl font-bold text-white">Your Events</h2>
+                                <button onclick="showMyTeam()" class="text-white/60 hover:text-white text-sm">View All</button>
                             </div>
-                            <div class="space-y-3">
-                                ${events.map(event => `
-                                    <div class="event-item flex items-center justify-between p-3 border border-white/10 rounded-xl">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-gradient-to-r ${event.color} rounded-lg flex items-center justify-center">
-                                                <span class="text-xl">${event.icon}</span>
-                                            </div>
-                                            <div>
-                                                <p class="text-white font-medium">${event.name}</p>
-                                                <p class="text-white/50 text-xs">${event.date} • ${event.venue}</p>
-                                            </div>
-                                        </div>
-                                        <span class="text-xs px-2 py-1 ${event.status === 'registered' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} rounded-full">
-                                            ${event.status === 'registered' ? '✓ Registered' : '⏳ Pending'}
-                                        </span>
-                                    </div>
-                                `).join('')}
+                            <div id="dashboardEvents" class="space-y-3">
+                                <div class="text-white/50 text-sm py-4">Loading events...</div>
                             </div>
                         </div>
                         
-                        <!-- Recent Activity -->
                         <div class="glass-card rounded-2xl p-6">
-                            <h2 class="text-xl font-bold text-white mb-4">🔄 Recent Activity</h2>
-                            <div class="space-y-3">
-                                <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                                    <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                                        <span class="text-green-400">✓</span>
-                                    </div>
-                                    <div>
-                                        <p class="text-white text-sm">You registered for <span class="font-semibold">AI Hackathon 2025</span></p>
-                                        <p class="text-white/40 text-xs mt-1">2 hours ago</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                                    <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                                        <span class="text-blue-400">👥</span>
-                                    </div>
-                                    <div>
-                                        <p class="text-white text-sm">Team invitation received for <span class="font-semibold">Code Warriors</span></p>
-                                        <p class="text-white/40 text-xs mt-1">1 day ago</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                                    <div class="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                                        <span class="text-purple-400">📢</span>
-                                    </div>
-                                    <div>
-                                        <p class="text-white text-sm">New announcement: <span class="font-semibold">Orientation on Jan 14th</span></p>
-                                        <p class="text-white/40 text-xs mt-1">2 days ago</p>
-                                    </div>
-                                </div>
+                            <h2 class="text-xl font-bold text-white mb-4">Recent Activity</h2>
+                            <div id="dashboardActivity" class="space-y-3">
+                                <div class="text-white/50 text-sm py-4">Loading activity...</div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+            // Load stats & events after rendering
+            loadDashboardStats();
+            loadDashboardEvents();
+            loadDashboardActivity();
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const regRes = await fetch(`${API}/registrations/my`, { headers: { Authorization: `Bearer ${token()}` } });
+                const regs = await regRes.json();
+                const approved = regs.filter(r => r.status === "approved");
+                const pending = regs.filter(r => r.status === "pending");
+                const allRegs = regs;
+
+                document.getElementById("statRegistered").textContent = approved.length;
+                document.getElementById("statEvents").textContent = allRegs.length;
+                if (approved.length > 0) {
+                    document.getElementById("statRegisteredList").textContent = approved.map(r => r.event?.title).filter(Boolean).join(", ").slice(0, 30) + "...";
+                }
+                if (allRegs.length > 0) {
+                    document.getElementById("statEventsNext").textContent = allRegs[0]?.event?.title || "--";
+                }
+
+                // My teams count
+                const teamRes = await fetch(`${API}/teams`, { headers: { Authorization: `Bearer ${token()}` } });
+                const teams = await teamRes.json();
+                const myTeams = teams.filter(t => t.members?.some(m => m.studentId === localStorage.getItem("userId")));
+                document.getElementById("statTeams").textContent = myTeams.length;
+                if (myTeams.length > 0) document.getElementById("statTeamsInfo").textContent = myTeams[0].name;
+
+                // Notifications
+                const notifRes = await fetch(`${API}/notifications`, { headers: { Authorization: `Bearer ${token()}` } });
+                const notifs = await notifRes.json();
+                const unread = notifs.filter(n => !n.read);
+                document.getElementById("statNotifs").textContent = unread.length;
+                document.getElementById("statNotifsInfo").textContent = unread.length > 0 ? `${unread.length} unread` : "All clear";
+            } catch(e) {}
+        }
+
+        async function loadDashboardEvents() {
+            try {
+                const res = await fetch(`${API}/events`, { headers: { Authorization: `Bearer ${token()}` } });
+                const events = await res.json();
+                const container = document.getElementById("dashboardEvents");
+                if (!events || events.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-sm py-4">No events available</div>';
+                    return;
+                }
+                container.innerHTML = events.slice(0, 5).map(ev => `
+                    <div class="event-item flex items-center justify-between p-3 border border-white/10 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold">E</span>
+                            </div>
+                            <div>
+                                <p class="text-white font-medium">${ev.title}</p>
+                                <p class="text-white/50 text-xs">${ev.date ? new Date(ev.date).toLocaleDateString() : "TBD"}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full">View</span>
+                    </div>
+                `).join("");
+            } catch(e) {
+                document.getElementById("dashboardEvents").innerHTML = '<div class="text-white/50 text-sm py-4">Could not load events</div>';
+            }
+        }
+
+        async function loadDashboardActivity() {
+            try {
+                const res = await fetch(`${API}/notifications`, { headers: { Authorization: `Bearer ${token()}` } });
+                const notifs = await res.json();
+                const container = document.getElementById("dashboardActivity");
+                if (!notifs || notifs.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-sm py-4">No recent activity</div>';
+                    return;
+                }
+                container.innerHTML = notifs.slice(0, 5).map(n => `
+                    <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                        <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-blue-400 text-xs">${n.type === "team" ? "T" : "N"}</span>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm">${n.message}</p>
+                            <p class="text-white/40 text-xs mt-1">${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ""}</p>
+                        </div>
+                    </div>
+                `).join("");
+            } catch(e) {
+                document.getElementById("dashboardActivity").innerHTML = '<div class="text-white/50 text-sm py-4">Could not load activity</div>';
+            }
         }
         
         // My Team View
-        function showMyTeam() {
+        async function showMyTeam() {
             setActiveNav('myteam');
             const container = document.getElementById('mainContent');
             container.innerHTML = `
                 <div class="animate-fade-in">
                     <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-white">My Team</h1>
-                        <p class="text-white/80 text-lg mt-2">Collaborate with your teammates</p>
+                        <h1 class="text-3xl font-bold text-white">My Teams</h1>
+                        <p class="text-white/80 text-lg mt-2">Teams you are a member of</p>
                     </div>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Team Info -->
-                        <div class="lg:col-span-2">
-                            <div class="glass-card rounded-2xl overflow-hidden">
-                                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6">
-                                    <h2 class="text-2xl font-bold text-white">${team.name}</h2>
-                                    <p class="text-primary-100 mt-1">${team.event}</p>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-lg font-semibold text-white mb-4">Team Members (${team.members.length})</h3>
-                                    <div class="space-y-3">
-                                        ${team.members.map(member => `
-                                            <div class="team-member flex items-center justify-between p-3 border border-white/10 rounded-xl">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="relative">
-                                                        <div class="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                                            ${member.avatar}
-                                                        </div>
-                                                        <div class="absolute bottom-0 right-0 w-3 h-3 ${member.isOnline ? 'bg-green-500' : 'bg-gray-500'} rounded-full border-2 border-gray-900"></div>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-white font-medium">${member.name}</p>
-                                                        <p class="text-white/50 text-xs">${member.role}</p>
-                                                    </div>
-                                                </div>
-                                                <span class="text-xs ${member.isOnline ? 'text-green-400' : 'text-gray-400'}">${member.isOnline ? '● Online' : '○ Offline'}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                    
-                                    <div class="mt-6 p-4 bg-white/5 rounded-xl">
-                                        <p class="text-white/70 text-sm">👨‍🏫 Faculty Mentor: ${team.mentor}</p>
-                                    </div>
-                                    
-                                    <button onclick="openChatModal()" class="mt-6 w-full btn-primary py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                        Open Team Chat
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Quick Actions -->
-                        <div class="glass-card rounded-2xl p-6">
-                            <h3 class="text-lg font-semibold text-white mb-4">⚡ Quick Actions</h3>
-                            <div class="space-y-3">
-                                <button onclick="openChatModal()" class="w-full btn-outline px-4 py-3 rounded-xl text-white text-sm flex items-center justify-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                    Message Team
-                                </button>
-                                <button onclick="showDashboard()" class="w-full btn-outline px-4 py-3 rounded-xl text-white text-sm flex items-center justify-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    View Events
-                                </button>
-                            </div>
-                        </div>
+                    <div id="myTeamsContent">
+                        <div class="text-white/50 text-center py-12">Loading teams...</div>
                     </div>
                 </div>
             `;
+            await loadMyTeamsContent();
+        }
+
+        async function loadMyTeamsContent() {
+            const container = document.getElementById("myTeamsContent");
+            try {
+                const userId = localStorage.getItem("userId");
+                const res = await fetch(`${API}/teams`, { headers: { Authorization: `Bearer ${token()}` } });
+                const allTeams = await res.json();
+                const myTeams = allTeams.filter(t => t.members?.some(m => m.studentId === userId || m.student?.id === userId));
+
+                if (myTeams.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-center py-12">You are not in any team yet.</div>';
+                    return;
+                }
+
+                container.innerHTML = myTeams.map(team => `
+                    <div class="glass-card rounded-2xl overflow-hidden mb-6">
+                        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6">
+                            <h2 class="text-2xl font-bold text-white">${team.name}</h2>
+                            <p class="text-primary-100 mt-1">${team.event?.title || "Event"}</p>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Members (${team.members?.length || 0})</h3>
+                            <div class="space-y-3">
+                                ${(team.members || []).map(m => `
+                                    <div class="team-member flex items-center justify-between p-3 border border-white/10 rounded-xl">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                                ${(m.student?.name || "?").charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p class="text-white font-medium">${m.student?.name || "Unknown"}</p>
+                                                <p class="text-white/50 text-xs">${m.role || "Member"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </div>
+                    </div>
+                `).join("");
+            } catch(e) {
+                container.innerHTML = '<div class="text-white/50 text-center py-12">Error loading teams</div>';
+            }
         }
         
         // Notifications View
-        function showNotifications() {
+        async function showNotifications() {
             setActiveNav('notifications');
             const container = document.getElementById('mainContent');
             container.innerHTML = `
                 <div class="animate-fade-in">
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-white">Notifications</h1>
-                        <p class="text-white/80 text-lg mt-2">Stay updated with your events and team updates</p>
+                    <div class="mb-8 flex items-center justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-white">Notifications</h1>
+                            <p class="text-white/80 text-lg mt-2">Stay updated with your events and team updates</p>
+                        </div>
+                        <button onclick="markAllRead()" class="btn-outline px-4 py-2 rounded-lg text-white text-sm">Mark All Read</button>
                     </div>
-                    
-                    <div class="space-y-3">
-                        ${notifications.map(notif => `
-                            <div class="glass-card p-4 ${!notif.read ? 'border-l-4 border-blue-500' : ''}">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <h3 class="font-semibold text-white">${notif.title}</h3>
-                                            ${!notif.read ? '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">New</span>' : ''}
-                                        </div>
-                                        <p class="text-white/70 text-sm mb-2">${notif.message}</p>
-                                        <p class="text-white/40 text-xs">${notif.time}</p>
-                                    </div>
-                                    <button onclick="markAsRead(${notif.id})" class="text-white/40 hover:text-white/70 text-sm">Mark read</button>
-                                </div>
-                            </div>
-                        `).join('')}
+                    <div id="notificationsList" class="space-y-3">
+                        <div class="text-white/50 text-center py-12">Loading...</div>
                     </div>
                 </div>
             `;
+            await loadNotifications();
+        }
+
+        async function loadNotifications() {
+            const container = document.getElementById("notificationsList");
+            try {
+                const res = await fetch(`${API}/notifications`, { headers: { Authorization: `Bearer ${token()}` } });
+                const notifs = await res.json();
+                if (!notifs || notifs.length === 0) {
+                    container.innerHTML = '<div class="text-white/50 text-center py-12">No notifications yet</div>';
+                    return;
+                }
+                container.innerHTML = notifs.map(n => `
+                    <div class="glass-card p-4 ${!n.read ? 'border-l-4 border-blue-500' : ''}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-semibold text-white">${n.type.toUpperCase()}</h3>
+                                    ${!n.read ? '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">New</span>' : ''}
+                                </div>
+                                <p class="text-white/70 text-sm mb-2">${n.message}</p>
+                                <p class="text-white/40 text-xs">${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ""}</p>
+                            </div>
+                            ${!n.read ? `<button onclick="markNotifRead('${n.id}')" class="text-white/40 hover:text-white/70 text-sm">Mark read</button>` : ''}
+                        </div>
+                    </div>
+                `).join("");
+            } catch(e) {
+                container.innerHTML = '<div class="text-white/50 text-center py-12">Error loading notifications</div>';
+            }
+        }
+
+        async function markNotifRead(id) {
+            try {
+                await fetch(`${API}/notifications/${id}`, { method: "PUT", headers: { Authorization: `Bearer ${token()}` } });
+                await loadNotifications();
+            } catch(e) {}
+        }
+
+        async function markAllRead() {
+            try {
+                await fetch(`${API}/notifications/read-all`, { method: "PUT", headers: { Authorization: `Bearer ${token()}` } });
+                await loadNotifications();
+            } catch(e) {}
         }
         
         // Profile View
-        function showProfile() {
+        async function showProfile() {
             setActiveNav('profile');
             const container = document.getElementById('mainContent');
             container.innerHTML = `
@@ -570,55 +629,73 @@
                         <h1 class="text-3xl font-bold text-white">My Profile</h1>
                         <p class="text-white/80 text-lg mt-2">View and manage your profile information</p>
                     </div>
-                    
+                    <div id="profileContent">
+                        <div class="text-white/50 text-center py-12">Loading profile...</div>
+                    </div>
+                </div>
+            `;
+            await loadProfileContent();
+        }
+
+        async function loadProfileContent() {
+            const container = document.getElementById("profileContent");
+            try {
+                const name = localStorage.getItem("userName") || "Student";
+                const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+                const res = await fetch(`${API}/profile`, { headers: { Authorization: `Bearer ${token()}` } });
+                let data = null;
+                if (res.status !== 404) data = await res.json();
+
+                const skills = data?.skills ? data.skills.split(",").map(s => s.trim()) : [];
+                container.innerHTML = `
                     <div class="glass-card rounded-2xl overflow-hidden">
                         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-center">
                             <div class="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center mb-4">
-                                <span class="text-3xl font-bold text-indigo-600">SM</span>
+                                <span class="text-3xl font-bold text-indigo-600">${initials}</span>
                             </div>
-                            <h2 class="text-2xl font-bold text-white">${user.name}</h2>
-                            <p class="text-primary-100">${user.rollNumber} • ${user.branch} • ${user.year} Year</p>
+                            <h2 class="text-2xl font-bold text-white">${name}</h2>
+                            <p class="text-primary-100">${data?.rollno || ""} ${data?.branch ? "• " + data.branch : ""} ${data?.year ? "• " + data.year : ""}</p>
                         </div>
                         <div class="p-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-white/60 mb-1">Email</label>
-                                    <p class="text-white">${user.email}</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-white/60 mb-1">Phone</label>
-                                    <p class="text-white">${user.phone}</p>
+                                    <p class="text-white">${localStorage.getItem("userEmail") || "--"}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-white/60 mb-1">Roll Number</label>
-                                    <p class="text-white">${user.rollNumber}</p>
+                                    <p class="text-white">${data?.rollno || "--"}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-white/60 mb-1">Branch</label>
-                                    <p class="text-white">${user.branch}</p>
+                                    <p class="text-white">${data?.branch || "--"}</p>
                                 </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-white/60 mb-1">Bio</label>
-                                    <p class="text-white">${user.bio}</p>
+                                <div>
+                                    <label class="block text-sm font-medium text-white/60 mb-1">Year</label>
+                                    <p class="text-white">${data?.year || "--"}</p>
                                 </div>
+                                ${skills.length > 0 ? `
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-white/60 mb-2">Skills</label>
                                     <div class="flex flex-wrap gap-2">
-                                        ${user.skills.map(skill => `<span class="px-3 py-1 bg-white/10 rounded-full text-white/80 text-sm">${skill}</span>`).join('')}
+                                        ${skills.map(s => `<span class="px-3 py-1 bg-white/10 rounded-full text-white/80 text-sm">${s}</span>`).join("")}
                                     </div>
-                                </div>
+                                </div>` : ""}
+                                ${data?.linkedin || data?.github ? `
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-white/60 mb-2">Links</label>
                                     <div class="flex gap-4">
-                                        <a href="#" class="text-blue-400 hover:text-blue-300 text-sm">GitHub: ${user.github}</a>
-                                        <a href="#" class="text-blue-400 hover:text-blue-300 text-sm">LinkedIn: ${user.linkedin}</a>
+                                        ${data?.github ? `<a href="${data.github}" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm">GitHub</a>` : ""}
+                                        ${data?.linkedin ? `<a href="${data.linkedin}" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm">LinkedIn</a>` : ""}
                                     </div>
-                                </div>
+                                </div>` : ""}
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch(e) {
+                container.innerHTML = '<div class="text-white/50 text-center py-12">Error loading profile</div>';
+            }
         }
         
         // Settings View
@@ -635,7 +712,7 @@
                     <div class="space-y-4">
                         <!-- Notification Preferences -->
                         <div class="glass-card p-6">
-                            <h2 class="text-lg font-semibold text-white mb-4">🔔 Notification Preferences</h2>
+                            <h2 class="text-lg font-semibold text-white mb-4">Notification Preferences</h2>
                             <div class="space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div>
@@ -672,7 +749,7 @@
                         
                         <!-- Privacy Settings -->
                         <div class="glass-card p-6">
-                            <h2 class="text-lg font-semibold text-white mb-4">🛡️ Privacy</h2>
+                            <h2 class="text-lg font-semibold text-white mb-4">Privacy</h2>
                             <div class="space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div>
@@ -689,7 +766,7 @@
                         
                         <!-- Danger Zone -->
                         <div class="glass-card p-6 border-red-500/30">
-                            <h2 class="text-lg font-semibold text-red-400 mb-4">⚠️ Danger Zone</h2>
+                            <h2 class="text-lg font-semibold text-red-400 mb-4">Danger Zone</h2>
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-white">Delete Account</p>
@@ -711,7 +788,6 @@
         // Chat Functions
         function openChatModal() {
             const modal = document.getElementById('chatModal');
-            const messagesContainer = document.getElementById('chatMessages');
             renderChatMessages();
             modal.classList.add('active');
         }
@@ -772,21 +848,6 @@
             chatMessages.push(newMessage);
             renderChatMessages();
             input.value = '';
-            
-            // Simulate reply after 2 seconds
-            setTimeout(() => {
-                const replies = ['Great point!', 'I agree!', 'Let me check on that.', 'Thanks for sharing!'];
-                const randomReply = replies[Math.floor(Math.random() * replies.length)];
-                const replyMessage = {
-                    id: chatMessages.length + 1,
-                    sender: 'John David',
-                    text: randomReply,
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    type: 'received'
-                };
-                chatMessages.push(replyMessage);
-                renderChatMessages();
-            }, 2000);
         }
         
         // Helper Functions
@@ -799,12 +860,6 @@
             document.getElementById(`nav-${page}`).classList.add('bg-white/10');
         }
         
-        function markAsRead(id) {
-            const notif = notifications.find(n => n.id === id);
-            if (notif) notif.read = true;
-            showNotifications();
-        }
-        
         function saveSettings() {
             const emailNotif = document.getElementById('emailNotif')?.checked;
             const teamNotif = document.getElementById('teamNotif')?.checked;
@@ -812,40 +867,29 @@
             const onlineStatus = document.getElementById('onlineStatus')?.checked;
             
             localStorage.setItem('userSettings', JSON.stringify({ emailNotif, teamNotif, eventNotif, onlineStatus }));
-            alert('✅ Settings saved successfully!');
+            alert('Settings saved successfully!');
         }
         
         function deleteAccount() {
-            if (confirm('⚠️ Are you sure you want to delete your account? This action cannot be undone!')) {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
                 alert('Account deleted. Redirecting to home page...');
                 logout();
             }
         }
         
-            function logout() {
-            localStorage.clear();
-            window.location.href = "../homepage.html";
-            }
-
         function navigate(page) {
             const map = { events: "../student_events.html", profile: "../student_profiles.html" };
             if (map[page]) window.location.href = map[page];
         }
-        
         
         function closeModal() {
             document.getElementById('eventModal').classList.remove('active');
         }
         
         // Initialize Dashboard
+        updateSidebar();
+        loadUserProfile();
         showDashboard();
-        
-        // Load saved settings
-        const savedSettings = localStorage.getItem('userSettings');
-        if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            // Apply settings if needed
-        }
     </script>
 </body>
 </html>

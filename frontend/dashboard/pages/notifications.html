@@ -37,7 +37,7 @@
                 </div>
                 <div class="glass-card rounded-xl p-4 mb-6">
                     <h3 id="facultyName" class="font-bold text-white text-lg">Faculty</h3>
-                    <p class="text-xs text-white/60">CSE Department</p>
+                    <p id="facultyDept" class="text-xs text-white/60">Department</p>
                 </div>
                 <div class="space-y-1">
                     <button onclick="navigate('dashboard')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-dashboard">Dashboard</button>
@@ -45,15 +45,15 @@
                     <button onclick="navigate('create')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-create">Create Event</button>
                     <button onclick="navigate('registrations')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-registrations">
                         <span>Registrations</span>
-                        <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full" id="regBadge">0</span>
+                        <span id="regBadge" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">0</span>
                     </button>
                     <button onclick="navigate('teams')" class="sidebar-item w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-teams">
                         <span>Teams</span>
-                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full" id="teamBadge">0</span>
+                        <span id="teamBadge" class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">0</span>
                     </button>
                     <button onclick="navigate('notifications')" class="sidebar-item active w-full text-left flex items-center justify-between px-4 py-3 rounded-xl text-white font-medium" id="nav-notifications">
                         <span>Notifications</span>
-                        <span id="notifBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                        <span id="notifBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full pulse-element">0</span>
                     </button>
                     <button onclick="navigate('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-white/70 hover:text-white font-medium" id="nav-settings">Settings</button>
                 </div>
@@ -143,6 +143,7 @@
 
         const storedName = localStorage.getItem("userName");
         if (storedName) document.getElementById("facultyName").textContent = storedName;
+        document.getElementById("facultyDept").textContent = localStorage.getItem("userEmail") || "Department";
         loadNotifications();
 
         (function createBubbles() {
@@ -157,5 +158,6 @@
             }
         })();
     </script>
+    <script src="nav.js"></script>
 </body>
 </html>
