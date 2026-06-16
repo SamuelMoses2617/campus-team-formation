@@ -627,20 +627,23 @@
     <script>
         // Navigation handlers
         function handleNav(page) {
-            event.preventDefault();
-            alert('✨ ' + page + ' page coming soon!\n\nStay tuned for updates.');
+            if (page === 'Events') window.location.href = 'student_events.html';
+            else if (page === 'Register' || page === 'Sign In') window.location.href = 'login.html';
+            else if (page === 'About') alert('Campus Event Team Formation Platform - Empowering students to build winning teams!');
+            else if (page === 'Privacy' || page === 'Terms') alert('Coming soon.');
+            else if (page === 'Contact') alert('Contact us at: support@campusevent.com');
         }
         
         function handleGetStarted() {
-            alert('✨ Welcome to CampusEvent!\n\nLogin/Signup page coming soon.\n\nDemo credentials:\nStudent: student@example.com / 123');
+            window.location.href = 'login.html';
         }
         
         function handleViewEvents() {
-            alert('🎯 View all events page coming soon!\n\nStay tuned for exciting updates.');
+            window.location.href = 'student_events.html';
         }
         
         function handleEventRegister() {
-            alert('📝 Event registration form will open soon!\n\nPlease check back later.');
+            window.location.href = 'login.html';
         }
         
         // Create floating particles

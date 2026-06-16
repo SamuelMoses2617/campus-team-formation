@@ -28,7 +28,7 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 // Fallback: any unknown route serves frontend/index.html (not needed here since every page is a separate HTML file)
 // But keep the root redirect
 app.get("/", (req, res) => {
-  res.redirect("/login.html");
+  res.redirect("/homepage.html");
 });
 
 const PORT = process.env.PORT || 5001;
